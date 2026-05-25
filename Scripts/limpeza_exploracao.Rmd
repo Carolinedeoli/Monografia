@@ -1,0 +1,526 @@
+---
+title: "Relatório de Limpeza e Análise Descritiva - Dados ENEM 2023"
+author: "Caroline de Oliveira Costa"
+date: "`r format(Sys.time(), '%d de %B de %Y')`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    
+---
+
+```{r setup, include=FALSE}
+# Configurações globais de chunks
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE, 
+  options(encoding = "UTF-8"),
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
+)
+
+
+# Bibliotecas necessárias
+library(readr)
+library(dplyr)
+library(tidyr)
+library(nortest)
+library(scales)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+```
+
+```{r leitura, include=FALSE}
+#Leitura dos arquivos
+source("leitura_bases.R")
+source("descritivas_monografia.R")
+```
+
+## Introdução 
+
+Temos inicialmente uma base do ENEM 2023 com 3.933.955 de linhas, entende-se linhas como os participantes inscritos para a prova. E além disso, possuimos 76 colunas com informações sobre o participante, resultados da prova e as repostas do questionário sociodemográfico respondido ao realizar a inscrição pelo site do INEP. 
+```{r tabela_resumo}
+# 1. Criação do objeto (Certifique-se de que termina aqui)
+tabela_resumo <- dados_2023 %>%
+  summarise(
+    `Total de Inscritos (Linhas)` = n(),
+    `Presentes: Ciências da Natureza (CN)` = sum(TP_PRESENCA_CN == 1, na.rm = TRUE),
+    `Presentes: Ciências Humanas (CH)` = sum(TP_PRESENCA_CH == 1, na.rm = TRUE),
+    `Presentes: Linguagens e Códigos (LC)` = sum(TP_PRESENCA_LC == 1, na.rm = TRUE),
+    `Presentes: Matemática (MT)` = sum(TP_PRESENCA_MT == 1, na.rm = TRUE),
+    `Redações válidas` = sum(TP_STATUS_REDACAO == 1, na.rm = TRUE),
+    `Presentes no Dia 1 (CH e LC)` = sum(TP_PRESENCA_CH == 1 & TP_PRESENCA_LC == 1, na.rm = TRUE),
+    `Presentes no Dia 2 (CN e MT)` = sum(TP_PRESENCA_CN == 1 & TP_PRESENCA_MT == 1, na.rm = TRUE),
+    `Redações feitas` = sum(!is.na(TP_STATUS_REDACAO)),
+    `Presentes em Todas as Provas` = sum(
+      TP_PRESENCA_CN == 1 &
+        TP_PRESENCA_CH == 1 &
+        TP_PRESENCA_LC == 1 &
+        TP_PRESENCA_MT == 1,
+      na.rm = TRUE
+    )
+  ) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Métrica",
+    values_to = "Quantidade"
+  ) %>%
+  mutate(
+    Porcentagem = scales::percent(Quantidade / Quantidade[Métrica == "Total de Inscritos (Linhas)"],
+                          accuracy = 0.1,
+                          decimal.mark = ",")
+  ) 
+
+# 2. Chamada da tabela (Em uma nova linha ou bloco)
+knitr::kable(
+  tabela_resumo,
+  align = c("l", "r", "r"),
+  caption = "Resumo de Participação dos Inscritos no ENEM",
+  format.args = list(big.mark = ".", decimal.mark = ","),
+  booktabs = TRUE
+)
+```
+
+A redação é avaliada por 2 corretores e esses decidem se a redação está valida ou se o participante zera-rá a redação devido a alguns fatores. Em 2023 68,76% das redções dos participantes inscritos foram validadas.
+```{r redacao}
+# 1. Criar a contagem por categoria
+tabela_redacao <- dados_2023 %>%
+  group_by(TP_STATUS_REDACAO) %>%
+  summarise(Quantidade = n()) %>%
+  mutate(
+    Descricao = case_when(
+      TP_STATUS_REDACAO == 1 ~ "Sem problemas",
+      TP_STATUS_REDACAO == 2 ~ "Anulada",
+      TP_STATUS_REDACAO == 3 ~ "Cópia Texto Motivador",
+      TP_STATUS_REDACAO == 4 ~ "Em Branco",
+      TP_STATUS_REDACAO == 6 ~ "Fuga ao tema",
+      TP_STATUS_REDACAO == 7 ~ "Não atendimento ao tipo",
+      TP_STATUS_REDACAO == 8 ~ "Texto insuficiente",
+      TP_STATUS_REDACAO == 9 ~ "Parte desconectada",
+      TRUE ~ "Não compareceu / Outros"
+    )
+  ) %>%
+  select(TP_STATUS_REDACAO, Descricao, Quantidade) %>%
+  arrange(TP_STATUS_REDACAO)
+
+# 2. Adicionar porcentagem para facilitar a análise
+total_com_redacao <- sum(tabela_redacao$Quantidade)
+tabela_redacao <- tabela_redacao %>%
+  mutate(Porcentagem = paste0(round((Quantidade / total_com_redacao) * 100, 2), "%"))
+
+# 3. Criar tabela
+tabela_redacao %>%  mutate(    Porcentagem = percent(Quantidade / sum(Quantidade),                          accuracy = 0.1,                          decimal.mark = ",")  ) %>%  kable(    col.names = c("Código", "Situação da Redação", "Quantidade", "Porcentagem"),    align = c("c", "l", "r", "r"),    caption = "Distribuição do Status das Redações no ENEM",    format.args = list(big.mark = ".", decimal.mark = ","),    booktabs = TRUE  ) %>%  kable_styling(    latex_options = c("striped", "hold_position", "scale_down"),    full_width = FALSE,    font_size = 9  ) %>%  column_spec(2, width = "7cm")
+
+```
+
+Para uma avaliação geral, essa foi a distribuição das notas encontradas pela base completa de inscrição
+```{r notas_1}
+# 1. Organização dados 
+tabela_notas_1 <- dados_2023 %>%
+  summarise(across(
+    starts_with("NU_NOTA_"), 
+    list(
+      Mín = ~min(.x, na.rm = TRUE),
+      Máx = ~max(.x, na.rm = TRUE),
+      Média = ~mean(.x, na.rm = TRUE),
+      Mediana = ~median(.x, na.rm = TRUE),
+      DP = ~sd(.x, na.rm = TRUE)
+    ),
+    .names = "{.col}###{.fn}"
+  )) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Materia", "Estatistica"),
+    names_sep = "###"
+  ) %>%
+  pivot_wider(
+    names_from = Estatistica,
+    values_from = value
+  ) %>%
+  mutate(
+    Materia = gsub("NU_NOTA_", "", Materia),
+    Materia = recode(Materia,
+                     "CN" = "Ciências da Natureza",
+                     "CH" = "Ciências Humanas",
+                     "LC" = "Linguagens e Códigos",
+                     "MT" = "Matemática",
+                     "REDACAO" = "Redação") # Adicionei Redação caso exista na base
+  )
+
+
+# 2. Processamento e Formatação em um único bloco
+tabela_notas_final <- dados_2023 %>%
+  summarise(across(
+    starts_with("NU_NOTA_"), 
+    list(
+      Mín = ~min(.x, na.rm = TRUE),
+      Máx = ~max(.x, na.rm = TRUE),
+      Média = ~mean(.x, na.rm = TRUE),
+      Mediana = ~median(.x, na.rm = TRUE),
+      DP = ~sd(.x, na.rm = TRUE)
+    ),
+    .names = "{.col}###{.fn}"
+  )) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Materia", "Estatistica"),
+    names_sep = "###"
+  ) %>%
+  pivot_wider(
+    names_from = Estatistica,
+    values_from = value
+  ) %>%
+  mutate(
+    Materia = gsub("NU_NOTA_", "", Materia),
+    Materia = recode(Materia,
+                     "CN" = "Ciências da Natureza",
+                     "CH" = "Ciências Humanas",
+                     "LC" = "Linguagens e Códigos",
+                     "MT" = "Matemática",
+                     "COMP1" = "Redação: Competência 1",
+                     "COMP2" = "Redação: Competência 2",
+                     "COMP3" = "Redação: Competência 3",
+                     "COMP4" = "Redação: Competência 4",
+                     "COMP5" = "Redação: Competência 5",
+                     "REDACAO" = "Nota Total da Redação")
+  )
+
+# 3. Gerando a saída visual com kable
+tabela_notas_final %>%
+  knitr::kable(
+    digits = 2,
+    format.args = list(big.mark = ".", decimal.mark = ","),
+    align = "lrrrrr",
+    caption = "Estatísticas Descritivas das Notas e Competências - ENEM 2023",
+    col.names = c("Área de Conhecimento", "Mínimo", "Máximo", "Média", "Mediana", "Desvio Padrão")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    latex_options = "hold_position"
+  )
+```
+
+## Limpeza 
+Após isso foi realizada a restirada dos inscritos que não estiveram presentes em pelomenos um dia de prova e aqueles em que a redação teve uma avaliação diferente de "Sem problemas" e a tabela de médias foi realizada novamente, junto com o acréscimo da variável Desempenho que é a média simples das notas de cada um dos participantes. 
+
+Essa segunda base ficou com um total de 2.569.190 linhas, ou seja em 2023 tivemos 2.569.190 participantes presentes em ambos os dias com redações válidas. 
+
+```{r notas}
+# 1. Processamento e Formatação em um único bloco
+tabela_notas <- dados_enem_presentes %>%
+  summarise(across(
+    starts_with("NU_NOTA_"), 
+    list(
+      Mín = ~min(.x, na.rm = TRUE),
+      Máx = ~max(.x, na.rm = TRUE),
+      Média = ~mean(.x, na.rm = TRUE),
+      Mediana = ~median(.x, na.rm = TRUE),
+      DP = ~sd(.x, na.rm = TRUE)
+    ),
+    .names = "{.col}###{.fn}"
+  )) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Materia", "Estatistica"),
+    names_sep = "###"
+  ) %>%
+  pivot_wider(
+    names_from = Estatistica,
+    values_from = value
+  ) %>%
+  mutate(
+    Materia = gsub("NU_NOTA_", "", Materia),
+    Materia = recode(Materia,
+                     "CN" = "Ciências da Natureza",
+                     "CH" = "Ciências Humanas",
+                     "LC" = "Linguagens e Códigos",
+                     "MT" = "Matemática",
+                     "COMP1" = "Redação: Competência 1",
+                     "COMP2" = "Redação: Competência 2",
+                     "COMP3" = "Redação: Competência 3",
+                     "COMP4" = "Redação: Competência 4",
+                     "COMP5" = "Redação: Competência 5",
+                     "REDACAO" = "Nota Total da Redação")
+  )
+
+# 2. Gerando a saída visual com kable
+tabela_notas %>%
+  knitr::kable(
+    digits = 2,
+    format.args = list(big.mark = ".", decimal.mark = ","),
+    align = "lrrrrr",
+    caption = "Estatísticas Descritivas das Notas e Competências Presentes - ENEM 2023",
+    col.names = c("Área de Conhecimento", "Mínimo", "Máximo", "Média", "Mediana", "Desvio Padrão")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    latex_options = "hold_position"
+  )
+```
+
+Frequências após limpeza
+  
+```{r frequencias,  fig.width=5, fig.height=3}
+tab_frequencia(dados_enem_presentes, "TP_SEXO", "Distribuição por Sexo")
+tab_frequencia(dados_enem_presentes, "TP_FAIXA_ETARIA", "Distribuição por Faixa Etária")
+tab_frequencia(dados_enem_presentes, "TP_COR_RACA", "Distribuição por Cor/Raça")
+tab_frequencia(dados_enem_presentes, "TP_ESTADO_CIVIL", "Distribuição por Estado Civil")
+tab_frequencia(dados_enem_presentes, "TP_ESCOLA", "Distribuição por Tipo de Escola")
+tab_frequencia(dados_enem_presentes, "TP_NACIONALIDADE", "Distribuição por Nacionalidade")
+tab_frequencia(dados_enem_presentes, "TP_DEPENDENCIA_ADM_ESC", "Distribuição por Dependência Administrativa")
+tab_frequencia(dados_enem_presentes, "IN_TREINEIRO", "Distribuição de Treineiros")
+tab_frequencia(dados_enem_presentes, "TP_ANO_CONCLUIU", "Distribuição por Ano de Conclusão")
+tab_frequencia(dados_enem_presentes, "TP_ST_CONCLUSAO", "Situação de Conclusão do Ensino Médio")
+
+```
+
+Para verificar a quantidade de NA's, foi realizada uma tabela
+
+```{r NA}
+data.frame(
+  Variável = names(dados_enem_presentes),
+  NAs = colSums(is.na(dados_enem_presentes)),
+  Percentual = colMeans(is.na(dados_enem_presentes))
+) %>%
+  mutate(
+    Percentual = percent(Percentual, accuracy = 0.1, decimal.mark = ",")
+  ) %>%
+  arrange(desc(NAs)) %>%  # 🔥 ordena pelas mais problemáticas
+  kable(
+    align = c("l", "r", "r"),
+    col.names = c("Variável", "Quantidade de NAs", "Percentual"),
+    caption = "Valores Ausentes por Variável",
+    format.args = list(big.mark = ".", decimal.mark = ","),
+    booktabs = TRUE
+  ) %>%
+  kable_styling(
+    latex_options = c("striped", "hold_position", "scale_down"),
+    full_width = FALSE,
+    font_size = 9
+  ) %>%
+  column_spec(1, width = "6cm")
+```
+
+## Análise descritiva 
+
+### Gráficos de Barra das Informações dos Participantes
+
+```{r graf_barras,  fig.width=5, fig.height=3}
+grafico_barra(dados_enem_presentes, "TP_FAIXA_ETARIA", "Faixa Etária dos Participantes")
+grafico_barra(dados_enem_presentes, "TP_ANO_CONCLUIU", "Ano que concluiu o Ensino Médio")
+grafico_barra(dados_enem_presentes, "TP_COR_RACA", "Cor/Raça Declarada")
+grafico_barra(dados_enem_presentes, "TP_NACIONALIDADE", "Nacionalidade dos Participantes")
+grafico_barra(dados_enem_presentes, "TP_ENSINO", "Tipo de Ensino")
+grafico_barra(dados_enem_presentes, "TP_DEPENDENCIA_ADM_ESC", "Tipo de Dependência da Escola")
+grafico_barra(dados_enem_presentes, "TP_ST_CONCLUSAO", "Tipo de situação de Conclusão do EM")
+
+```
+
+###  Distribuição das 5 Competências da Redação de 2023 
+
+```{r graf_red,  fig.width=5, fig.height=3}
+grafico_comp_redacao(dados_enem_presentes, "NU_NOTA_COMP1", "Distribuição — Redação Competência 1")
+  grafico_comp_redacao(dados_enem_presentes, "NU_NOTA_COMP2", "Distribuição – Redação Competência 2")
+  grafico_comp_redacao(dados_enem_presentes, "NU_NOTA_COMP3", "Distribuição – Redação Competência 3")
+  grafico_comp_redacao(dados_enem_presentes, "NU_NOTA_COMP4", "Distribuição – Redação Competência 4")
+  grafico_comp_redacao(dados_enem_presentes, "NU_NOTA_COMP5", "Distribuição – Redação Competência 5")
+
+```
+
+### Histograma Notas Na Prova do ENEM 2023
+
+```{r,  fig.width=5, fig.height=3}
+grafico_histograma(dados_enem_presentes, "NU_NOTA_CN", "Distribuição da Nota de Ciências da Natureza")
+  grafico_histograma(dados_enem_presentes, "NU_NOTA_CH", "Distribuição da Nota de Ciências Humanas")
+  grafico_histograma(dados_enem_presentes, "NU_NOTA_LC", "Distribuição da Nota de Linguagens")
+  grafico_histograma(dados_enem_presentes, "NU_NOTA_MT", "Distribuição da Nota de Matemática")
+  grafico_histograma(dados_enem_presentes, "desempenho", "Desempenho Médio dos Participantes")
+
+```
+
+
+## Análise do Desempenho por tipo de participante
+
+
+### Desempenho por Sexo
+```{r}
+tabela_resumo_profissional(dados_enem_presentes, "TP_SEXO", "desempenho", "Resumo do Desempenho por Sexo")
+plot_hist_individual(dados_enem_presentes, "TP_SEXO", "desempenho")
+```
+
+### Desempenho por Dependência 
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "TP_DEPENDENCIA_ADM_ESC", "desempenho", "Resumo do Desempenho por Tipo de Escola")
+plot_hist_individual(dados_enem_presentes, "TP_DEPENDENCIA_ADM_ESC", "desempenho")
+plot_densidade(dados_enem_presentes, "TP_DEPENDENCIA_ADM_ESC", "desempenho")
+
+```
+
+### Desempenho por tipo de escola
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "TP_ESCOLA", "desempenho", "Resumo do Desempenho por Tipo de Escola")
+plot_hist_individual(dados_enem_presentes, "TP_ESCOLA", "desempenho")
+```
+
+###  Desempenho por faixa etária
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "TP_FAIXA_ETARIA", "desempenho", "Resumo do Desempenho por Tipo de Escola")
+
+```
+
+###  Desempenho por tipo de Conclusão 
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "TP_ST_CONCLUSAO", "desempenho", "Resumo do Desempenho por Tipo de Escola")
+plot_hist_individual(dados_enem_presentes, "TP_ST_CONCLUSAO", "desempenho")
+
+```
+
+### Desempenho por Cor/Raça
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "TP_COR_RACA", "desempenho", "Resumo do Desempenho por Tipo de Escola")
+plot_hist_individual(dados_enem_presentes, "TP_COR_RACA", "desempenho")
+
+```
+
+## Análise das Respostas do questionário 
+
+```{r,  fig.width=5, fig.height=3}
+tab_frequencia(dados_enem_presentes, "escolaridade_pai", "Distribuição por Escolaridade do Pai")
+tab_frequencia(dados_enem_presentes, "escolaridade_mae", "Distribuição por Escolaridade da Mãe")
+tab_frequencia(dados_enem_presentes, "renda_familiar", "Distribuição por Renda Familiar")
+tab_frequencia(dados_enem_presentes, "celulares", "Distribuição por posse de celular na residência")
+tab_frequencia(dados_enem_presentes, "computadores", "Distribuição por posse de computadores na residência")
+tab_frequencia(dados_enem_presentes, "internet", "Distribuição por acesso a internet")
+tab_frequencia(dados_enem_presentes, "moradores", "Distribuição por número de moradores na residência")
+
+```
+
+## Análise desempenho por questões do questionário 
+
+### Desempenho e por Escolaridade do Pai
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "escolaridade_pai", "desempenho", "Resumo do Desempenho por Escolaridade do Pai")
+```
+
+### Desempenho e por Escolaridade da Mãe
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "escolaridade_mae", "desempenho", "Resumo do Desempenho por Escolaridade da Mãe")
+plot_hist_individual(dados_enem_presentes, "escolaridade_mae", "desempenho")
+```
+### Desempenho e por Renda Familiar
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "renda_familiar", "desempenho", "Resumo do Desempenho por Renda Familiar")
+```
+### Desempenho e por Posse de Celular na Residência
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "celulares", "desempenho", "Resumo do Desempenho por posse de celular na residência")
+plot_hist_individual(dados_enem_presentes, "celulares", "desempenho")
+```
+### Desempenho e por Posse de Computadores na Residência
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "computadores", "desempenho", "Resumo do Desempenho por posse de computadores na residência")
+```
+### Desempenho e por Acesso a Internet na Residência
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "internet", "desempenho", "Resumo do Desempenho por acesso a internet")
+plot_hist_individual(dados_enem_presentes, "internet", "desempenho")
+```
+### Desempenho e por Número de Moradores na Residência
+```{r,  fig.width=5, fig.height=3}
+tabela_resumo_profissional(dados_enem_presentes, "moradores", "desempenho", "Resumo do Desempenho por número de moradores na residência")
+```
+
+## Estudantes que podem obter o certificado de conclusão do Ensino Médio e declaração parcial de proficiência 
+https://riep.inep.gov.br/server/api/core/bitstreams/e5f9e064-e761-48e9-8f8c-7668ed26de54/content 
+
+Para se obter a possibilidade que concluir o ensino médio ou a declaração parcial de proeficiência, o participante deverá ter 18 anos ou mais e atingir o mínimo de 450 pontos em cada área o mínimo de 500 na redação. Em 2023, 290.584 candidados tinham 18 anos ou mais e poderiam tentar emitir o certificado, porém apenas 52,06% desses alcançaram as notas mínimas para tal ação. 
+
+```{r}
+# 1. Processamento dos dados
+tabela_final <- dados_enem_presentes %>%
+  # Filtrando categorias conforme sua base categórica
+  filter(TP_FAIXA_ETARIA != "17 anos", 
+         TP_ST_CONCLUSAO %in% c("Estou cursando e concluirei o Ensino Médio após 2023", 
+                                "Não concluí e não estou cursando o Ensino Médio")) %>%
+  
+  # Criando critério de certificação
+  mutate(conseguiu = ifelse(
+    NU_NOTA_CN >= 450 & 
+    NU_NOTA_CH >= 450 & 
+    NU_NOTA_LC >= 450 & 
+    NU_NOTA_MT >= 450 & 
+    NU_NOTA_REDACAO >= 500, 
+    1, 0)) %>%
+  
+  # Agrupamento e Sumário
+  group_by(TP_FAIXA_ETARIA, TP_ST_CONCLUSAO) %>%
+  summarise(
+    Total = n(),
+    Certificados = sum(conseguiu, na.rm = TRUE),
+    Proporcao = (Certificados / Total) * 100,
+    .groups = "drop"
+  )
+  
+
+# 2. Gerando a tabela com kable
+tabela_final %>%
+  # PASSO IMPORTANTE: Selecionar apenas as 4 colunas que você quer nomear
+  select(TP_FAIXA_ETARIA, TP_ST_CONCLUSAO, Total, Proporcao) %>%
+  kable(
+    col.names = c("Faixa Etária", "Status Conclusão", "Total Inscritos", "Proporção (%)"),
+    digits = 2,
+    caption = "Proporção de Candidatos aptos à Certificação por Faixa Etária e Conclusão",
+    align = "llcc",
+    escape = FALSE 
+  ) %>%
+  kable_styling(
+    latex_options = c("striped", "hover", "hold_position", "scale_down"),
+    full_width = FALSE
+  )
+```
+
+### Aos que já se formaram
+Para quem já se formou, é um bom parâmetro da qualidade do ensino, saber se essas pessoas conseguiriram atingir as notas mínimas para se formarem. Neste ano, 1.072.154 participantes já haviam se formado, e desses, 49.16% poderiam solicitar o certificado de conclusão do Ensino Médio ou a declaração parcial de proficiência.
+```{r}
+# 1. Processamento dos dados
+tabela_concluiu <- dados_enem_presentes %>%
+  # Filtrando categorias conforme sua base categórica
+  filter(TP_ST_CONCLUSAO == "Já concluí o Ensino Médio") %>%
+  
+  # Criando critério de certificação
+  mutate(conseguiu = ifelse(
+    NU_NOTA_CN >= 450 & 
+    NU_NOTA_CH >= 450 & 
+    NU_NOTA_LC >= 450 & 
+    NU_NOTA_MT >= 450 & 
+    NU_NOTA_REDACAO >= 500, 
+    1, 0)) %>%
+  
+  # Agrupamento e Sumário
+  group_by(TP_ANO_CONCLUIU) %>%
+  summarise(
+    Total = n(),
+    Certificados = sum(conseguiu, na.rm = TRUE),
+    Proporcao = (Certificados / Total) * 100,
+    .groups = "drop"
+  )
+  
+
+# 2. Gerando a tabela com kable
+tabela_concluiu %>%
+  kable(
+    col.names = c("Ano de Conclusão", "Total Inscritos", "Qtd. Aprovados", "Proporção (%)"),
+    digits = 2,
+    caption = "Desempenho no ENEM 2023: Candidatos já Formados que atingiriam critérios de Certificação",
+    align = "lccc"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = F
+  )
+```
+
