@@ -23,23 +23,72 @@ h2{
 /* =========================================
    FILTROS
 ========================================= */
+.btn-filtros{
+    position: fixed;
+    top: 15px;
+    left: 15px;
 
-.filtros{
+    background: #1f2937;
+    color: white;
+
+    border: none;
+    padding: 10px 15px;
+
+    border-radius: 8px;
+    cursor: pointer;
+
+    z-index: 1001;
+}
+
+
+.filtros {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    padding: 70px 20px 20px 20px;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 15px;
-    margin-bottom: 30px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    
+    /* ADICIONE ESSA LINHA: Garante que os dropdowns flutuem para fora se necessário */
+    overflow-y: visible; 
+}
+.filtros.fechado{
+    transform: translateX(-100%);
 }
 
 .filtros select{
-    padding: 10px;
-    border-radius: 8px;
+    padding: 8px;
+    border-radius: 6px;
     border: 1px solid #ccc;
-    background: white;
-    min-width: 200px;
-    font-size: 14px;
 }
 
+/* =========================================
+   AJUSTES DO BOTÃO DE LIMPAR (TOM SELECT)
+========================================= */
+
+/* Estiliza o botão X de limpar tudo */
+.ts-wrapper .clear-button {
+    font-size: 14px;
+    color: #999 !important;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.ts-wrapper .clear-button:hover {
+    color: #ef4444 !important; /* Fica vermelho ao passar o mouse */
+}
+
+/* Garante espaçamento para o botão dentro da caixa */
+.ts-wrapper.multi .ts-control {
+    padding-right: 24px !important;
+}
 /* =========================================
    CARDS
 ========================================= */
@@ -123,39 +172,110 @@ h2{
    GRÁFICOS
 ========================================= */
 
-.graficos{
-    flex: 2;
+
+
+/* =========================================
+   LAYOUT PRINCIPAL
+========================================= */
+
+body{
+    font-family: Arial;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =========================================
+   GRID PRINCIPAL
+========================================= */
+
+.dashboard-grid{
+    display: grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: 20px;
+
+    height: calc(100vh - 280px);
+}
+
+/* =========================================
+   COLUNA ESQUERDA
+========================================= */
+
+.painel-esquerda{
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    height: 100%;
+}
+
+/* =========================================
+   GRÁFICOS
+========================================= */
+
+.grafico-box{
+    background: white;
+
+    border-radius: 10px;
+
+    padding: 10px;
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.grafico-box h2{
+    font-size: 18px;
+    margin-bottom: 10px;
 }
 
 .grafico{
     background: white;
-    padding: 15px;
-    border-radius: 15px;
-
-    height: 280px;
+    padding: 8px;
+    border-radius: 9px;
+    height: 220px;
 }
 
+#graficoInscritos,
+#graficoPresenca{
+    flex: 1;
+}
+
+/* =========================================
+   COLUNA DIREITA
+========================================= */
+
+.painel-direita{
+    height: 100%;
+}
 
 /* =========================================
    TABELA
 ========================================= */
 
 .tabela-container{
-    flex: 1;
-
     background: white;
-    padding: 20px;
-    border-radius: 10px;
 
-    box-shadow: 0px 2px 8px rgba(0,0,0,0.08);
+    border-radius: 8px;
 
-    overflow-x: auto;
+    padding: 15px;
+
+    height: 85%;
+
+    overflow-y: auto;
 }
 
-
+.tabela-container h2{
+    font-size: 15px;
+    margin-bottom: 15px;
+}
 
 #tabelaRedacao{
     width: 100%;
@@ -165,14 +285,12 @@ h2{
 #tabelaRedacao th,
 #tabelaRedacao td{
     border-bottom: 1px solid #ddd;
-    padding: 12px;
+    padding: 9px;  /* ficou com menos espaço interno, talvez seja letra*/
     text-align: left;
-    font-size: 14px;
 }
 
 #tabelaRedacao th{
     background-color: #f0f0f0;
-    font-weight: bold;
 }
 
 /* =========================================

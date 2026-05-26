@@ -43,7 +43,7 @@ function atualizarGraficoInscritos(base){
 
     let layout = {
 
-    height: 250,
+    height: 180,
 
     margin: {
         t: 30,
@@ -55,8 +55,10 @@ function atualizarGraficoInscritos(base){
     legend: {
         orientation: "h",
         y: -0.2
-    }
-    };
+    },
+
+    autosize: true
+};
 
     Plotly.newPlot(
         "graficoInscritos",
@@ -150,7 +152,7 @@ function atualizarGraficoPresenca(base){
 
     let layout = {
 
-    height: 220,
+    height: 180,
 
     margin: {
         t: 30,
@@ -162,7 +164,9 @@ function atualizarGraficoPresenca(base){
     legend: {
         orientation: "h",
         y: -0.2
-    }
+    },
+
+    autosize: true
 };
     Plotly.newPlot(
         "graficoPresenca",

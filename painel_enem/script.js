@@ -71,6 +71,7 @@ function carregarRedacao(){
     });
 }
 
+
 /* =========================================
    FIXAR O ÚLTIMO ANO DISPONÍVEL
 ========================================= */
@@ -90,34 +91,77 @@ function definirUltimoAnoComoPadrao() {
    FILTRAR E ATUALIZAR PAINEL
 ========================================= */
 function atualizarPainel(){
-    const ano = document.getElementById("filtroAno").value.trim();
-    const uf = document.getElementById("filtroUF").value.trim();
-    const escola = document.getElementById("filtroEscola").value.trim();
-    const depAdm = document.getElementById("filtroDepAdm").value.trim();
+    const anos = Array.from(document.getElementById("filtroAno").selectedOptions).map(o => o.value);
 
+    const ufs = Array.from(document.getElementById("filtroUF").selectedOptions).map(o => o.value);
+
+    const escolas = Array.from(document.getElementById("filtroEscola").selectedOptions).map(o => o.value);
+
+    const deps = Array.from(document.getElementById("filtroDepAdm").selectedOptions).map(o => o.value);
     // Filtro Geral (cards normais dependem do Ano selecionado)
     let dadosFiltradosGeral = dados.filter(linha => {
-        let bateAno = (ano === "Todos" || (linha.ANO && linha.ANO.toString() === ano));
-        let bateUF = (uf === "Todos" || (linha.estado_prova && linha.estado_prova === uf));
-        let bateEscola = (escola === "Todos" || (linha.tipo_escola && linha.tipo_escola === escola));
-        let bateDep = (depAdm === "Todos" || (linha.dep_adm && linha.dep_adm === depAdm));
+        let bateAno =
+        anos.length === 0 ||
+        anos.includes("Todos") ||
+        anos.includes(linha.ANO?.toString());
+
+        let bateUF =
+        ufs.length === 0 ||
+        ufs.includes("Todos") ||
+        ufs.includes(linha.estado_prova);
+
+        let bateEscola =
+        escolas.length === 0 ||
+        escolas.includes("Todos") ||
+        escolas.includes(linha.tipo_escola);
+
+        let bateDep =
+        deps.length === 0 ||
+        deps.includes("Todos") ||
+        deps.includes(linha.dep_adm);
         return bateAno && bateUF && bateEscola && bateDep;
     });
 
     // Filtro para Média (Ignora o select de Ano, mantendo o histórico)
     let dadosParaMedia = dados.filter(linha => {
-        let bateUF = (uf === "Todos" || (linha.estado_prova && linha.estado_prova === uf));
-        let bateEscola = (escola === "Todos" || (linha.tipo_escola && linha.tipo_escola === escola));
-        let bateDep = (depAdm === "Todos" || (linha.dep_adm && linha.dep_adm === depAdm));
+        let bateUF =
+        ufs.length === 0 ||
+        ufs.includes("Todos") ||
+        ufs.includes(linha.estado_prova);
+
+        let bateEscola =
+        escolas.length === 0 ||
+        escolas.includes("Todos") ||
+        escolas.includes(linha.tipo_escola);
+
+        let bateDep =
+        deps.length === 0 ||
+        deps.includes("Todos") ||
+        deps.includes(linha.dep_adm);
         return bateUF && bateEscola && bateDep;
     });
 
     // Filtro da Redação (A tabela da redação obedece a todos os filtros, incluindo o Ano fixado)
     let dadosFiltradosRedacao = dadosRedacao.filter(linha => {
-        let bateAno = (ano === "Todos" || (linha.ANO && linha.ANO.toString() === ano));
-        let bateUF = (uf === "Todos" || (linha.estado_prova && linha.estado_prova === uf));
-        let bateEscola = (escola === "Todos" || (linha.tipo_escola && linha.tipo_escola === escola));
-        let bateDep = (depAdm === "Todos" || (linha.dep_adm && linha.dep_adm === depAdm));
+        let bateAno =
+        anos.length === 0 ||
+        anos.includes("Todos") ||
+        anos.includes(linha.ANO?.toString());
+
+        let bateUF =
+        ufs.length === 0 ||
+        ufs.includes("Todos") ||
+        ufs.includes(linha.estado_prova);
+
+        let bateEscola =
+        escolas.length === 0 ||
+        escolas.includes("Todos") ||
+        escolas.includes(linha.tipo_escola);
+
+        let bateDep =
+        deps.length === 0 ||
+        deps.includes("Todos") ||
+        deps.includes(linha.dep_adm);
         return bateAno && bateUF && bateEscola && bateDep;
     });
 
@@ -127,4 +171,11 @@ function atualizarPainel(){
     atualizarGraficoPresenca(dadosParaMedia);
 }
 
+
+const btnFiltros = document.getElementById("btnFiltros");
+const painelFiltros = document.getElementById("painelFiltros");
+
+btnFiltros.addEventListener("click", () => {
+    painelFiltros.classList.toggle("fechado");
+});
 

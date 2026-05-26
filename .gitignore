@@ -1,7 +1,7 @@
 # 
 *.csv
 DOCUMENTOS_ENEM/
-dados/
+painel_enem/dados/
 # History files
 .Rhistory
 .Rapp.history

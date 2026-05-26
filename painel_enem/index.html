@@ -3,36 +3,52 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel ENEM</title>
-
+    
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <button id="btnFiltros" class="btn-filtros">
+    ☰ Filtros
+    </button>
 
     <h1>Estatísticas Gerais</h1>
 
-    <div class="filtros">
+    <div class="filtros fechado" id="painelFiltros">
 
-    <select id="filtroAno">
-        <option value="Todos">Todos os anos</option>
-    </select>
 
-    <select id="filtroUF">
-        <option value="Todos">Todos os estados</option>
-    </select>
+    <div class="filtro-item">
+        <label>Ano</label>
+        <select id="filtroAno">
+            <option value="Todos">Todos</option>
+        </select>
+    </div>
 
-    <select id="filtroEscola">
-        <option value="Todos">Todos os tipos</option>
-    </select>
+    <div class="filtro-item">
+        <label>UF</label>
+        <select id="filtroUF">
+            <option value="Todos">Todos</option>
+        </select>
+    </div>
 
-    <select id="filtroDepAdm">
-        <option value="Todos">Todas dependências</option>
-    </select>
+    <div class="filtro-item">
+        <label>Escola</label>
+        <select id="filtroEscola">
+            <option value="Todos">Todos</option>
+        </select>
+    </div>
+
+    <div class="filtro-item">
+        <label>Dependência</label>
+        <select id="filtroDepAdm">
+            <option value="Todos">Todos</option>
+        </select>
+    </div>
+
+</div>
 
 </div>
     <div class="cards">
@@ -75,62 +91,64 @@
         </div>
 
     </div>
-<div class="painel-inferior">
+<div class="dashboard-grid">
 
-    <div class="graficos">
+    <!-- COLUNA ESQUERDA -->
+    <div class="painel-esquerda">
 
-        <div class="grafico">
-            <h2>Gráfico Participação</h2>
+        <div class="grafico-box">
+            <h2>Evolução de Inscritos e Participantes</h2>
             <div id="graficoInscritos"></div>
         </div>
 
-        <div class="grafico">
-            <h2>Gráfico Presença</h2>
+        <div class="grafico-box">
+            <h2>Presença e Redações Válidas</h2>
             <div id="graficoPresenca"></div>
         </div>
 
     </div>
 
-    <div class="tabela-container">
+    <!-- COLUNA DIREITA -->
+    <div class="painel-direita">
 
-        <h2>Status da Redação</h2>
+        <div class="tabela-container">
 
-        <table id="tabelaRedacao">
+            <h2>Status da Redação</h2>
 
-            <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>Quantidade</th>
-                    <th>% Inscritos</th>
-                </tr>
-            </thead>
+            <table id="tabelaRedacao">
 
-            <tbody>
-            </tbody>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Quantidade</th>
+                        <th>% Inscritos</th>
+                    </tr>
+                </thead>
 
-        </table>
+                <tbody></tbody>
+
+            </table>
+
+        </div>
 
     </div>
 
 </div>
-    <!-- Bibliotecas -->
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-
+   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
-    <!-- Scripts -->
     <script src="js/filtros.js"></script>
     <script src="js/cards.js"></script>
     <script src="js/graficos.js"></script>
     <script src="js/tabelas.js"></script>
     
-
     <script src="script.js"></script>
-
 </body>
 </html>
 
 
 
 </body>
+
 </html>
