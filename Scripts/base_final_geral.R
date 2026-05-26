@@ -16,7 +16,7 @@ library(jsonlite)
 processar_ano_enem <- function(ano_prova) {
   cat("Processando o ano:", ano_prova, "...\n")
   
-  arquivo_input <- paste0("DADOS/MICRODADOS_ENEM_", ano_prova, ".csv")
+  arquivo_input <- paste0("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_", ano_prova, ".csv")
   
   # 1. Leitura seletiva das colunas
   dados <- fread(arquivo_input, sep = ";", dec = ",", select = c(
@@ -106,6 +106,6 @@ base_painel_completa <- bind_rows(processar_ano_enem(2022), processar_ano_enem(2
 
 # 4. Exportação Única para o seu Painel JS
 write_json(base_painel_completa, "DADOS/painel_categorias_completo.json", dataframe = "rows")
-write.csv(base_painel_completa, "DADOS/base_painel_completa.csv", row.names = FALSE)
+write.csv(base_painel_completa, "DOCUMENTOS_ENEM/DADOS/GERAL.csv", row.names = FALSE)
 cat("Processo finalizado! Arquivo com dados originais unificados criado.")
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Painel ENEM</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+
+    <h1>Estatísticas Gerais</h1>
+
+    <div class="filtros">
+
+    <select id="filtroAno">
+        <option value="Todos">Todos os anos</option>
+    </select>
+
+    <select id="filtroUF">
+        <option value="Todos">Todos os estados</option>
+    </select>
+
+    <select id="filtroEscola">
+        <option value="Todos">Todos os tipos</option>
+    </select>
+
+    <select id="filtroDepAdm">
+        <option value="Todos">Todas dependências</option>
+    </select>
+
+</div>
+    <div class="cards">
+
+        <div class="card">
+            <h3>Inscritos</h3>
+            <p id="totalInscritos">0</p>
+        </div>
+
+        <div class="card">
+            <h3>
+            Participantes
+            <span class="info"
+            title="Participantes presentes nos dois dias e com redação válida.">
+            ⓘ
+            </span>
+            </h3>
+            <p id="totalParticipantes">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Porcentagem de Participantes</h3>
+            <p id="percentParticipacao">0%</p>
+        </div>
+
+        <div class="card">
+            <h3>Porcentagem de Redações Válidas
+                <span class="info"
+                title="Percentual de redações válidas entre os presentes no primeiro dia.">
+                ⓘ
+                </span>
+            </h3>
+            <p id="percentRedacoesValidas">0%</p>
+        </div>
+
+        <div class="card">
+            <h3>Média Participantes por Ano</h3>
+            <p id="mediaParticipantesAno">0</p>
+            <small id="notaMediaAnos"></small>
+        </div>
+
+    </div>
+<div class="tabela-container">
+
+    <h2>Status da Redação</h2>
+
+    <table id="tabelaRedacao">
+
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Quantidade</th>
+                <th>% Inscritos</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        </tbody>
+
+    </table>
+
+</div>
+    <script src="script.js"></script>
+
+
+
+
+</body>
+</html>

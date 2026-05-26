@@ -13,7 +13,7 @@ library(jsonlite)
 #===============================================================================
 processar_redacao_enem <- function(ano_prova) {
   cat("Processando redação do ano:", ano_prova, "...\n")
-  arquivo_input <- paste0("DADOS/MICRODADOS_ENEM_", ano_prova, ".csv")
+  arquivo_input <- paste0("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_", ano_prova, ".csv")
   
   dados <- fread(arquivo_input, sep = ";", dec = ",", select = c(
    "SG_UF_PROVA", "TP_ESCOLA", "TP_DEPENDENCIA_ADM_ESC", "TP_STATUS_REDACAO"
@@ -83,4 +83,4 @@ processar_redacao_enem <- function(ano_prova) {
 base_redacao_completa <- bind_rows(processar_redacao_enem(2022), processar_redacao_enem(2023))
 
 write_json(redacao_completa, "DADOS/painel_redacao_completo.json", dataframe = "rows")
-write.csv(base_redacao_completa, "DADOS/painel_redacao_completo.csv", row.names = FALSE)
+write.csv(base_redacao_completa, "DOCUMENTOS_ENEM/DADOS/REDAÇÃO.csv", row.names = FALSE)
