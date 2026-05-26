@@ -3,15 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Painel ENEM</title>
 
     <link rel="stylesheet" href="style.css">
-
-    <!-- Plotly -->
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-
-    <!-- PapaParse -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 
 <body>
@@ -56,12 +54,12 @@
         </div>
 
         <div class="card">
-            <h3>Porcentagem de Participantes</h3>
+            <h3>% Participantes</h3>
             <p id="percentParticipacao">0%</p>
         </div>
 
         <div class="card">
-            <h3>Porcentagem de Redações Válidas
+            <h3>% Redações Válidas
                 <span class="info"
                 title="Percentual de redações válidas entre os presentes no primeiro dia.">
                 ⓘ
@@ -77,28 +75,60 @@
         </div>
 
     </div>
-<div class="tabela-container">
+<div class="painel-inferior">
 
-    <h2>Status da Redação</h2>
+    <div class="graficos">
 
-    <table id="tabelaRedacao">
+        <div class="grafico">
+            <h2>Gráfico Participação</h2>
+            <div id="graficoInscritos"></div>
+        </div>
 
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Quantidade</th>
-                <th>% Inscritos</th>
-            </tr>
-        </thead>
+        <div class="grafico">
+            <h2>Gráfico Presença</h2>
+            <div id="graficoPresenca"></div>
+        </div>
 
-        <tbody>
-        </tbody>
+    </div>
 
-    </table>
+    <div class="tabela-container">
+
+        <h2>Status da Redação</h2>
+
+        <table id="tabelaRedacao">
+
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Quantidade</th>
+                    <th>% Inscritos</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
+    <!-- Bibliotecas -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="js/filtros.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/graficos.js"></script>
+    <script src="js/tabelas.js"></script>
+    
+
     <script src="script.js"></script>
 
+</body>
+</html>
 
 
 

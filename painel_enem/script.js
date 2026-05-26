@@ -72,33 +72,6 @@ function carregarRedacao(){
 }
 
 /* =========================================
-   PREENCHER FILTROS
-========================================= */
-function preencherFiltros(){
-    preencherSelect("filtroAno", "ANO");
-    preencherSelect("filtroUF", "estado_prova");
-    preencherSelect("filtroEscola", "tipo_escola");
-    preencherSelect("filtroDepAdm", "dep_adm");
-}
-
-function preencherSelect(idSelect, coluna){
-    let select = document.getElementById(idSelect);
-    select.innerHTML = select.options[0].outerHTML;
-
-    let valores = [...new Set(dados.map(linha => linha[coluna]))]
-                    .filter(valor => valor !== undefined && valor !== null && valor.toString().trim() !== "");
-
-    valores.sort();
-
-    valores.forEach(valor => {
-        let option = document.createElement("option");
-        option.value = valor;
-        option.text = valor;
-        select.appendChild(option);
-    });
-}
-
-/* =========================================
    FIXAR O ÚLTIMO ANO DISPONÍVEL
 ========================================= */
 function definirUltimoAnoComoPadrao() {
@@ -111,15 +84,7 @@ function definirUltimoAnoComoPadrao() {
     }
 }
 
-/* =========================================
-   ESCUTAR MUDANÇAS NOS FILTROS
-========================================= */
-function configurarEventosFiltros() {
-    document.getElementById("filtroAno").addEventListener("change", atualizarPainel);
-    document.getElementById("filtroUF").addEventListener("change", atualizarPainel);
-    document.getElementById("filtroEscola").addEventListener("change", atualizarPainel);
-    document.getElementById("filtroDepAdm").addEventListener("change", atualizarPainel);
-}
+
 
 /* =========================================
    FILTRAR E ATUALIZAR PAINEL
@@ -158,109 +123,8 @@ function atualizarPainel(){
 
     atualizarCards(dadosFiltradosGeral, dadosParaMedia);
     atualizarTabelaRedacao(dadosFiltradosRedacao);
+    atualizarGraficoInscritos(dadosParaMedia);
+    atualizarGraficoPresenca(dadosParaMedia);
 }
 
-/* =========================================
-   ATUALIZAR CARDS
-========================================= */
-function atualizarCards(base, baseParaMedia){
-    let inscritos = 0;
-    let participantes = 0;
-    let redacoesValidas = 0;
-    let presentesDia1 = 0;
 
-    let limparNumero = (val) => {
-        if (!val) return 0;
-        let apenasDigitos = val.toString().replace(/[^\d]/g, "").trim();
-        return Number(apenasDigitos) || 0;
-    };
-
-    base.forEach(linha => {
-
-    inscritos +=
-        limparNumero(linha.total_inscritos);
-
-    participantes +=
-        limparNumero(linha.qtd_participantes);
-
-    redacoesValidas +=
-        limparNumero(linha.qtd_redacoes_validas);
-
-    presentesDia1 +=
-        limparNumero(linha.qtd_presenca_dia_1);
-});
-
-    let percentParticipacao = inscritos > 0 ? (participantes / inscritos) * 100 : 0;
-    let percentRedacoes =
-    presentesDia1 > 0
-    ? (redacoesValidas / presentesDia1) * 100
-    : 0;
-
-    // Cálculo da média histórica de participantes por ano
-    let participantesTotalMedia = 0;
-    baseParaMedia.forEach(linha => {
-        participantesTotalMedia += limparNumero(linha.qtd_participantes);
-    });
-    let anosUnicos = [...new Set(baseParaMedia.map(l => l.ANO))].filter(a => a);
-    let qtdAnos = anosUnicos.length || 1;
-    let mediaAnos = participantesTotalMedia / qtdAnos;
-
-    document.getElementById("totalInscritos").innerText = inscritos.toLocaleString('pt-BR');
-    document.getElementById("totalParticipantes").innerText = participantes.toLocaleString('pt-BR');
-    document.getElementById("percentParticipacao").innerText = percentParticipacao.toFixed(2) + "%";
-    document.getElementById("percentRedacoesValidas").innerText = percentRedacoes.toFixed(2) + "%";
-    document.getElementById("mediaParticipantesAno").innerText = Math.round(mediaAnos).toLocaleString('pt-BR');
-}
-
-/* =========================================
-   ATUALIZAR TABELA REDAÇÃO (Corrigido e Blindado)
-========================================= */
-function atualizarTabelaRedacao(baseFiltrada){
-    let tabela = document.getElementById("tabelaRedacao");
-    if (!tabela) return;
-
-    let tbody = tabela.querySelector("tbody");
-    if(!tbody) {
-        tbody = document.createElement("tbody");
-        tabela.appendChild(tbody);
-    }
-    
-    tbody.innerHTML = ""; // Limpa linhas anteriores
-
-    let resumo = {};
-    let totalPessoasFiltro = 0;
-
-    baseFiltrada.forEach(linha => {
-        let status = linha.motivo_status;
-        if (!status) return;
-
-        // Garante que o valor se transforme em texto antes de limpar caracteres especiais
-        let valorBruto = linha.numero_pessoas ? String(linha.numero_pessoas) : "0";
-        let pessoas = Number(valorBruto.replace(/[^\d]/g, "")) || 0;
-
-        if (!resumo[status]) {
-            resumo[status] = 0;
-        }
-        resumo[status] += pessoas;
-        totalPessoasFiltro += pessoas;
-    });
-
-    // Se nenhuma linha corresponder ao filtro, mostra um aviso amigável na tabela
-    if (totalPessoasFiltro === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#777;">Nenhum registro encontrado para este filtro.</td></tr>`;
-        return;
-    }
-
-    Object.keys(resumo).forEach(status => {
-        let quantidade = resumo[status];
-        let porcentagem = totalPessoasFiltro > 0 ? (quantidade / totalPessoasFiltro) * 100 : 0;
-
-        let tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${status}</td>
-            <td>${quantidade.toLocaleString('pt-BR')}</td>
-            <td>${porcentagem.toFixed(2)}%</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
