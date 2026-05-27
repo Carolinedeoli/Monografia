@@ -129,4 +129,32 @@ function atualizarPainel(){
     atualizarTabelaRedacao(dadosFiltradosRedacao);
     atualizarGraficoInscritos(dadosParaMedia);
     atualizarGraficoPresenca(dadosParaMedia);
+
+}
+/* =========================================
+   GERENCIAMENTO DE ALTERNÂNCIA DE PÁGINAS
+========================================= */
+function alterarPagina(idPagina) {
+    // 1. Oculta ambas as exibições
+    document.getElementById('pagina-geral').style.display = 'none';
+    document.getElementById('pagina-perfil').style.display = 'none';
+
+    // 2. Localiza e reseta o destaque visual dos botões de navegação
+    const botoes = document.querySelectorAll('.btn-nav');
+    botoes.forEach(btn => btn.classList.remove('ativo'));
+
+    // 3. Torna a página selecionada visível
+    document.getElementById('pagina-' + idPagina).style.display = 'flex';
+
+    // 4. Aplica a classe ativa ao botão que disparou o clique
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('ativo');
+    }
+
+    // 5. Ajuste técnico para o Plotly recalcular as dimensões dos vetores SVG 
+    // quando o container oculto retornar ao estado visível
+    if (idPagina === 'geral') {
+        Plotly.Plots.resize('graficoInscritos');
+        Plotly.Plots.resize('graficoPresenca');
+    }
 }
