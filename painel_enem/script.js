@@ -46,6 +46,7 @@ function carregarGeral(){
 /* =========================================
    CARREGAR BASE REDAÇÃO
 ========================================= */
+
 function carregarRedacao(){
     Papa.parse("dados/REDAÇÃO.csv", {
         download: true,
@@ -55,23 +56,17 @@ function carregarRedacao(){
             dadosRedacao = limparDados(resultado.data);
             console.log("Base Redação Carregada!");
 
-            // 1. Inicializa os selects do HTML
+            // 1. Cria as opções de todos os anos e checkboxes (já selecionando o último ano automaticamente)
             preencherFiltros();
             
-            // 2. Pré-seleciona o último ano
-            definirUltimoAnoComoPadrao();
-
-            // 3. Atualiza os cards e reconstrói a tabela
+            // 2. Renderiza os cards, tabelas e gráficos com base no ano que foi selecionado
             atualizarPainel();
-            configurarEventosFiltros();
         },
         error: function(erro) {
             console.error("Erro ao carregar REDAÇÃO.csv:", erro);
         }
     });
 }
-
-
 /* =========================================
    FIXAR O ÚLTIMO ANO DISPONÍVEL
 ========================================= */
@@ -81,101 +76,57 @@ function definirUltimoAnoComoPadrao() {
 
     if (anos.length > 0) {
         let ultimoAno = anos[anos.length - 1];
-        selectAno.value = ultimoAno; 
+        if(selectAno) selectAno.value = ultimoAno; 
     }
 }
 
-
-
 /* =========================================
-   FILTRAR E ATUALIZAR PAINEL
+   FILTRAR E ATUALIZAR PAINEL (CORRIGIDO)
 ========================================= */
 function atualizarPainel(){
-    const anos = Array.from(document.getElementById("filtroAno").selectedOptions).map(o => o.value);
+    // IMPORTANTE: Busca os filtros ativos gerados pelos inputs e checkboxes do js/filtros.js
+    const filtros = obterFiltrosSelecionados();
 
-    const ufs = Array.from(document.getElementById("filtroUF").selectedOptions).map(o => o.value);
-
-    const escolas = Array.from(document.getElementById("filtroEscola").selectedOptions).map(o => o.value);
-
-    const deps = Array.from(document.getElementById("filtroDepAdm").selectedOptions).map(o => o.value);
-    // Filtro Geral (cards normais dependem do Ano selecionado)
+    // Filtro Geral (cards normais dependem do Ano selecionado e dos Checkboxes)
     let dadosFiltradosGeral = dados.filter(linha => {
-        let bateAno =
-        anos.length === 0 ||
-        anos.includes("Todos") ||
-        anos.includes(linha.ANO?.toString());
+        let bateAno = filtros.ano === "Todos" || linha.ANO?.toString() === filtros.ano;
 
-        let bateUF =
-        ufs.length === 0 ||
-        ufs.includes("Todos") ||
-        ufs.includes(linha.estado_prova);
+        let bateUF = filtros.ufs === "Todos" || filtros.ufs.includes(linha.estado_prova);
 
-        let bateEscola =
-        escolas.length === 0 ||
-        escolas.includes("Todos") ||
-        escolas.includes(linha.tipo_escola);
+        let bateEscola = filtros.escolas === "Todos" || filtros.escolas.includes(linha.tipo_escola);
 
-        let bateDep =
-        deps.length === 0 ||
-        deps.includes("Todos") ||
-        deps.includes(linha.dep_adm);
+        let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
+
         return bateAno && bateUF && bateEscola && bateDep;
     });
 
-    // Filtro para Média (Ignora o select de Ano, mantendo o histórico)
+    // Filtro para Média (Ignora o select de Ano, mantendo o histórico de evolução)
     let dadosParaMedia = dados.filter(linha => {
-        let bateUF =
-        ufs.length === 0 ||
-        ufs.includes("Todos") ||
-        ufs.includes(linha.estado_prova);
+        let bateUF = filtros.ufs === "Todos" || filtros.ufs.includes(linha.estado_prova);
 
-        let bateEscola =
-        escolas.length === 0 ||
-        escolas.includes("Todos") ||
-        escolas.includes(linha.tipo_escola);
+        let bateEscola = filtros.escolas === "Todos" || filtros.escolas.includes(linha.tipo_escola);
 
-        let bateDep =
-        deps.length === 0 ||
-        deps.includes("Todos") ||
-        deps.includes(linha.dep_adm);
+        let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
+
         return bateUF && bateEscola && bateDep;
     });
 
-    // Filtro da Redação (A tabela da redação obedece a todos os filtros, incluindo o Ano fixado)
+    // Filtro da Redação (A tabela obedece a todos os filtros, incluindo o Ano)
     let dadosFiltradosRedacao = dadosRedacao.filter(linha => {
-        let bateAno =
-        anos.length === 0 ||
-        anos.includes("Todos") ||
-        anos.includes(linha.ANO?.toString());
+        let bateAno = filtros.ano === "Todos" || linha.ANO?.toString() === filtros.ano;
 
-        let bateUF =
-        ufs.length === 0 ||
-        ufs.includes("Todos") ||
-        ufs.includes(linha.estado_prova);
+        let bateUF = filtros.ufs === "Todos" || filtros.ufs.includes(linha.estado_prova);
 
-        let bateEscola =
-        escolas.length === 0 ||
-        escolas.includes("Todos") ||
-        escolas.includes(linha.tipo_escola);
+        let bateEscola = filtros.escolas === "Todos" || filtros.escolas.includes(linha.tipo_escola);
 
-        let bateDep =
-        deps.length === 0 ||
-        deps.includes("Todos") ||
-        deps.includes(linha.dep_adm);
+        let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
+
         return bateAno && bateUF && bateEscola && bateDep;
     });
 
+    // Executa a renderização dos componentes visuais com os dados estruturados
     atualizarCards(dadosFiltradosGeral, dadosParaMedia);
     atualizarTabelaRedacao(dadosFiltradosRedacao);
     atualizarGraficoInscritos(dadosParaMedia);
     atualizarGraficoPresenca(dadosParaMedia);
 }
-
-
-const btnFiltros = document.getElementById("btnFiltros");
-const painelFiltros = document.getElementById("painelFiltros");
-
-btnFiltros.addEventListener("click", () => {
-    painelFiltros.classList.toggle("fechado");
-});
-
