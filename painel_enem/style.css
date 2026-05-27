@@ -8,6 +8,7 @@ body{
     background-color: #f5f5f5;
 }
 
+
 h1{
     text-align: center;
     margin-bottom: 30px;
@@ -18,7 +19,6 @@ h2{
     margin-bottom: 15px;
     font-size: 20px;
 }
-
 
 /* =========================================
    FILTROS
@@ -172,175 +172,199 @@ h2{
    GRÁFICOS
 ========================================= */
 
-
-
 /* =========================================
-   LAYOUT PRINCIPAL
+   LAYOUT PRINCIPAL (Travado na tela)
 ========================================= */
 
-body{
+body {
     font-family: Arial;
     margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* =========================================
-   GRID PRINCIPAL
-========================================= */
-
-.dashboard-grid{
-    display: grid;
-
-    grid-template-columns: 2fr 1fr;
-
-    gap: 20px;
-
-    height: calc(100vh - 280px);
-}
-
-/* =========================================
-   COLUNA ESQUERDA
-========================================= */
-
-.painel-esquerda{
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-
-    height: 100%;
-}
-
-/* =========================================
-   GRÁFICOS
-========================================= */
-
-.grafico-box{
-    background: white;
-
-    border-radius: 10px;
-
-    padding: 10px;
-
-    flex: 1;
-
-    display: flex;
-    flex-direction: column;
-}
-
-.grafico-box h2{
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.grafico{
-    background: white;
-    padding: 8px;
-    border-radius: 9px;
-    height: 220px;
-}
-
-#graficoInscritos,
-#graficoPresenca{
-    flex: 1;
-}
-
-/* =========================================
-   COLUNA DIREITA
-========================================= */
-
-.painel-direita{
-    height: 100%;
-}
-
-/* =========================================
-   TABELA
-========================================= */
-
-.tabela-container{
-    background: white;
-
-    border-radius: 8px;
-
     padding: 15px;
+    background-color: #f5f5f5;
+    
+    /* Força a página a ter exatamente a altura da tela, sem rolar */
+    height: 100vh;
+    overflow: hidden; 
+    box-sizing: border-box;
 
-    height: 85%;
-
-    overflow-y: auto;
+    /* Organiza o topo (título) e o resto do dashboard verticalmente */
+    display: flex;
+    flex-direction: column;
 }
 
-.tabela-container h2{
+h1 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 28px;
+    flex-shrink: 0; /* Impede o título de esmagar o resto */
+}
+
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-shrink: 0; /* Impede os cards superiores de sumirem */
+}
+
+.card {
+    background: white;
+    padding: 12px 15px; /* Diminuído levemente o padding interno */
+    border-radius: 12px;
+    flex: 1;
+    min-width: 180px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.06);
+}
+
+.card h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #555;
+}
+
+.card p {
+    font-size: 22px; /* Reduzido de 25px para economizar espaço vertical */
+    font-weight: bold;
+    margin: 0;
+}
+
+/* =========================================
+   GRID PRINCIPAL (Dynamic Flex/Grid)
+========================================= */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+    
+    /* Ocupa exatamente o espaço que sobrou da tela */
+    flex: 1; 
+    min-height: 0; /* CRÍTICO: Permite que os filhos encolham abaixo do tamanho de conteúdo */
+    margin-bottom: 5px;
+}
+
+/* =========================================
+   COLUNA ESQUERDA (Gráficos)
+========================================= */
+
+.painel-esquerda {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+    min-height: 0; /* Permite encolhimento */
+}
+
+.grafico-box {
+    background: white;
+    border-radius: 10px;
+    padding: 12px;
+    flex: 1; /* Divide o espaço da esquerda igualmente entre os dois gráficos */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* CRÍTICO para o Plotly respeitar o container */
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.05);
+}
+
+.grafico-box h2 {
     font-size: 15px;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.grafico {
+    flex: 1;
+    width: 100%;
+    min-height: 0; /* Força o Plotly a se ajustar ao tamanho real disponível */
+}
+
+/* Força os IDs do Plotly a preencherem o container sem transbordar */
+#graficoInscritos,
+#graficoPresenca {
+    width: 100% !important;
+    height: 100% !important; 
+}
+
+
+/* =========================================
+   COLUNA DIREITA (Garante tamanho total)
+========================================= */
+
+.painel-direita {
+    display: flex;
+    width: 100%;       /* Força a coluna a usar toda a largura da grid */
+    height: 100%;      /* Força a coluna a usar toda a altura da grid */
+    min-height: 0;
+    align-items: stretch; /* Obriga o filho (tabela-container) a esticar até as bordas */
+}
+
+/* =========================================
+   CONTAINER DA TABELA 
+========================================= */
+
+.tabela-container {
+    background-color: white; /* Dá o fundo branco ao bloco inteiro */
+    border-radius: 10px;    /* Cantos arredondados iguais aos dos gráficos */
+    padding: 15px;          /* Espaçamento interno para a tabela não colar na borda */
+    box-shadow: 0px 2px 9px rgba(0,0,0,0.05); /* Mesma sombra leve dos gráficos */
+    
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.tabela-container h2 {
+    font-size: 16px;
+    margin-top: 0;
     margin-bottom: 15px;
 }
 
-#tabelaRedacao{
+/* =========================================
+   A TABELA INTERNA
+========================================= */
+
+#tabelaRedacao {
     width: 100%;
     border-collapse: collapse;
+    background-color: transparent; /* Deixa transparente para usar o branco do container */
 }
 
 #tabelaRedacao th,
-#tabelaRedacao td{
-    border-bottom: 1px solid #ddd;
-    padding: 9px;  /* ficou com menos espaço interno, talvez seja letra*/
+#tabelaRedacao td {
+    padding: 13px 12px;  
+    border-bottom: 2px solid #ccc; /* Suas bordas marcantes */
+    font-size: 14px;
     text-align: left;
+    background-color: transparent; /* Garante que nenhuma célula sobreponha o fundo */
 }
 
-#tabelaRedacao th{
-    background-color: #f0f0f0;
+#tabelaRedacao th {
+    font-weight: bold;
+    border-bottom: 3px solid #999; 
+    position: sticky;
+    top: 0;
 }
+
 
 /* =========================================
-   PLOTLY
+   RESPONSIVIDADE (Apenas se a tela for muito pequena)
 ========================================= */
 
-#graficoInscritos,
-#graficoPresenca{
-    width: 100%;
-    height: 350px;
+@media(max-width: 900px) {
+    /* Em telas muito pequenas (ex: celular), não há espaço físico para tudo sem rolar.
+       Nesse caso extremo, permitimos a rolagem geral para não quebrar a usabilidade. */
+    body {
+        height: auto;
+        overflow-y: auto;
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    #graficoInscritos, #graficoPresenca {
+        height: 250px !important;
+    }
 }
-
-/* =========================================
-   RESPONSIVIDADE
-========================================= */
-
-@media(max-width: 500px){
-
-    .conteudo-inferior{
-        flex-direction: column;
-    }
-
-    .graficos,
-    .tabela-container{
-        width: 100%;
-    }
-
-}
-
-@media(max-width: 700px){
-
-    body{
-        margin: 15px;
-    }
-
-    .cards{
-        flex-direction: column;
-    }
-
-    .card{
-        width: 100%;
-    }
-
-    .filtros{
-        flex-direction: column;
-    }
-
-    .filtros select{
-        width: 100%;
-    }
-
-}
-
