@@ -80,7 +80,7 @@ processar_redacao_enem <- function(ano_prova) {
 }
 
 # Unificação
-base_redacao_completa <- bind_rows(processar_redacao_enem(2022), processar_redacao_enem(2023))
+base_redacao_completa <- bind_rows(processar_redacao_enem(2019),processar_redacao_enem(2020),processar_redacao_enem(2021),processar_redacao_enem(2022), processar_redacao_enem(2023))
 
-write_json(redacao_completa, "DADOS/painel_redacao_completo.json", dataframe = "rows")
+#write_json(redacao_completa, "DADOS/painel_redacao_completo.json", dataframe = "rows")
 write.csv(base_redacao_completa, "DOCUMENTOS_ENEM/DADOS/REDAÇÃO.csv", row.names = FALSE)

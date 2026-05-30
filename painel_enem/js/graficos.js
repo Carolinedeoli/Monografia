@@ -22,8 +22,10 @@ function atualizarGraficoInscritos(base){
 
     });
 
-    let anos = Object.keys(resumo).sort();
-
+    
+    let anos = Object.keys(resumo)
+    .map(Number)
+    .sort((a,b) => a - b);
     let inscritos = anos.map(ano => resumo[ano].inscritos);
     let participantes = anos.map(ano => resumo[ano].participantes);
 
@@ -57,8 +59,13 @@ function atualizarGraficoInscritos(base){
         y: -0.2
     },
 
+    xaxis: {
+        tickmode: "linear",
+        dtick: 1
+    },
+
     autosize: true
-};
+    };
 
     Plotly.newPlot(
         "graficoInscritos",
@@ -104,7 +111,9 @@ function atualizarGraficoPresenca(base){
 
     });
 
-    let anos = Object.keys(resumo).sort();
+    let anos = Object.keys(resumo)
+    .map(Number)
+    .sort((a,b) => a - b);
 
     let dia1 = anos.map(
         ano => resumo[ano].dia1
@@ -166,8 +175,13 @@ function atualizarGraficoPresenca(base){
         y: -0.2
     },
 
+    xaxis: {
+        tickmode: "linear",
+        dtick: 1
+    },
+
     autosize: true
-};
+    };
     Plotly.newPlot(
         "graficoPresenca",
         [trace1, trace2, trace3, trace4],

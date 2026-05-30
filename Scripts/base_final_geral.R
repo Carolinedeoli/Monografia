@@ -36,6 +36,7 @@ processar_ano_enem <- function(ano_prova) {
       tipo_escola = case_when(
         TP_ESCOLA == 2 ~ "Pública",
         TP_ESCOLA == 3 ~ "Privada",
+        TP_ESCOLA == 4 ~ "Exterior",
         TRUE ~ "Não Informado"
       ),
       
@@ -62,14 +63,6 @@ processar_ano_enem <- function(ano_prova) {
       qtd_participantes = as.integer(sum(participantes, na.rm = TRUE)),
       qtd_redacoes_validas = as.integer(sum(TP_STATUS_REDACAO == 1, na.rm = TRUE)),
       
-      # Médias percentuais para os gráficos
-      percent_presenca_dia_1 = round((qtd_presenca_dia_1 / total_geral_ano ) * 100, 5),
-      percent_presenca_dia_2 = round((qtd_presenca_dia_2 / total_geral_ano) * 100, 5),
-      percent_redacoes_validas = round(
-        ifelse(qtd_presenca_dia_1 > 0, 
-               (qtd_redacoes_validas / total_redacoes_feitas) * 100, 0), 5),
-      percent_participantes = round((qtd_participantes / total_geral_ano) * 100, 5),
-      
       .groups = 'drop'
     ) %>%
   # 4. Tipagem final
@@ -79,19 +72,7 @@ processar_ano_enem <- function(ano_prova) {
       as.character(tipo_escola),
     
     dep_adm =
-      as.character(dep_adm),
-    
-    percent_presenca_dia_1 =
-      as.numeric(percent_presenca_dia_1),
-    
-    percent_presenca_dia_2 =
-      as.numeric(percent_presenca_dia_2),
-    
-    percent_redacoes_validas =
-      as.numeric(percent_redacoes_validas),
-    
-    percent_participantes =
-      as.numeric(percent_participantes)
+      as.character(dep_adm)
   )
   
   return(base_ano)
@@ -101,11 +82,11 @@ processar_ano_enem <- function(ano_prova) {
 }
 
 # --- EXECUÇÃO E UNIFICAÇÃO DOS ANOS ---
-base_painel_completa <- bind_rows(processar_ano_enem(2022), processar_ano_enem(2023))
+base_painel_completa <- bind_rows(processar_ano_enem(2019),processar_ano_enem(2020),processar_ano_enem(2021),processar_ano_enem(2022), processar_ano_enem(2023))
 
 
 # 4. Exportação Única para o seu Painel JS
-write_json(base_painel_completa, "DADOS/painel_categorias_completo.json", dataframe = "rows")
+#write_json(base_painel_completa, "DADOS/painel_categorias_completo.json", dataframe = "rows")
 write.csv(base_painel_completa, "DOCUMENTOS_ENEM/DADOS/GERAL.csv", row.names = FALSE)
 cat("Processo finalizado! Arquivo com dados originais unificados criado.")
 
