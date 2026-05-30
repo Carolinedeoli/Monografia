@@ -1,60 +1,92 @@
-/* =========================================
-   ATUALIZAR GRÁFICOS PERFIL
-========================================= */
-function atualizarGraficosPerfil() {
-    let base = perfilEstado.dadosFiltrados;
+/* =========================================================================
+   PERFIL GRÁFICOS - Lógica de Visualização
+========================================================================= */
 
-    // Se a base estiver vazia, exibe uma mensagem nos containers
-    if (!base || base.length === 0) {
-        const mensagem = "<div style='padding:20px; text-align:center; color:#64748b;'>Nenhum dado encontrado para os filtros selecionados.</div>";
-        document.getElementById("graficoRacaPerfil").innerHTML = mensagem;
-        document.getElementById("graficoFaixaPerfil").innerHTML = mensagem;
-        document.getElementById("graficoConclusaoPerfil").innerHTML = mensagem;
-        document.getElementById("graficoSexoPerfil").innerHTML = mensagem;
-        return;
+function atualizarGraficosPerfil() {
+    const base = perfilEstado.dadosFiltrados;
+
+    // --- 1. GRÁFICO VERTICAL (Coluna do Meio: Raça) ---
+    function desenharBarraVertical(id, coluna, titulo) {
+        const dados = {};
+        base.forEach(l => {
+            const val = l[coluna] || "N/A";
+            dados[val] = (dados[val] || 0) + (l.TOTAL_PEOPLE || 0);
+        });
+
+        const trace = [{
+            x: Object.keys(dados),
+            y: Object.values(dados),
+            type: 'bar',
+            marker: { color: '#3498db' }
+        }];
+
+        Plotly.newPlot(id, trace, {
+            margin: { t: 40, b: 80, l: 40, r: 20 },
+            
+            xaxis: { tickangle: -45 }
+        }, {responsive: true});
     }
 
-    // Objetos para armazenar as contagens agregadas
-    let contagemRaca = {};
-    let contagemFaixa = {};
-    let contagemConclusao = {};
-    let contagemSexo = {};
+    desenharBarraVertical('graficoRaca', 'TP_COR_RACA', 'Cor/Raça');
 
-    // Agregação dos dados
-    base.forEach(linha => {
-        if (linha.TP_COR_RACA) contagemRaca[linha.TP_COR_RACA] = (contagemRaca[linha.TP_COR_RACA] || 0) + 1;
-        if (linha.TP_FAIXA_ETARIA) contagemFaixa[linha.TP_FAIXA_ETARIA] = (contagemFaixa[linha.TP_FAIXA_ETARIA] || 0) + 1;
-        if (linha.TP_ST_CONCLUSAO) contagemConclusao[linha.TP_ST_CONCLUSAO] = (contagemConclusao[linha.TP_ST_CONCLUSAO] || 0) + 1;
-        if (linha.TP_SEXO) contagemSexo[linha.TP_SEXO] = (contagemSexo[linha.TP_SEXO] || 0) + 1;
+    // --- 2. GRÁFICO DE SEXO (Barra 100% Empilhada Horizontal com %) ---
+    // Corrigido: Declaração das variáveis antes do uso
+    const fem = base.reduce((soma, l) => l.TP_SEXO === 'Feminino' ? soma + l.TOTAL_PEOPLE : soma, 0);
+    const masc = base.reduce((soma, l) => l.TP_SEXO === 'Masculino' ? soma + l.TOTAL_PEOPLE : soma, 0);
+    const total = fem + masc;
+    
+    const percFem = total > 0 ? ((fem / total) * 100).toFixed(1) : 0;
+    const percMasc = total > 0 ? ((masc / total) * 100).toFixed(1) : 0;
+
+    const dataSexo = [
+        { 
+            x: [fem], 
+            y: ['Sexo'], 
+            orientation: 'h', 
+            type: 'bar', 
+            name: 'Feminino', 
+            text: [`${percFem}%`], 
+            textposition: 'inside', 
+            marker: { color: '#f39c12' } 
+        },
+        { 
+            x: [masc], 
+            y: ['Sexo'], 
+            orientation: 'h', 
+            type: 'bar', 
+            name: 'Masculino', 
+            text: [`${percMasc}%`], 
+            textposition: 'inside', 
+            marker: { color: '#2ecc71' } 
+        }
+    ];
+
+    Plotly.newPlot('graficoSexo', dataSexo, {
+        barmode: 'stack',
+        bargap: 0.7, // Deixa a barra mais fina
+        margin: { t: 0, b: 30, l: 40, r: 20 },
+        xaxis: { visible: false },
+        yaxis: { visible: false },
+        showlegend: true
+    }, {responsive: true});
+
+    // --- 3. GRÁFICO DE FAIXA ETÁRIA (Barra HORIZONTAL) ---
+    const idades = {};
+    base.forEach(l => {
+        idades[l.TP_FAIXA_ETARIA] = (idades[l.TP_FAIXA_ETARIA] || 0) + l.TOTAL_PEOPLE;
     });
 
-    const configLayoutBase = {
-        font: { family: 'Arial, sans-serif' },
-        margin: { t: 20, r: 20, b: 40, l: 60 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        showlegend: true
-    };
+    const dataIdade = [{
+        x: Object.values(idades), 
+        y: Object.keys(idades),   
+        type: 'bar',
+        orientation: 'h',         
+        marker: { color: '#002d62' }
+    }];
 
-    const configPlotly = { responsive: true, displayModeBar: false };
-
-    // 1. GRAFICO RAÇA
-    Plotly.newPlot('graficoRacaPerfil', [{
-        type: 'bar', x: Object.values(contagemRaca), y: Object.keys(contagemRaca), orientation: 'h', marker: { color: '#002d62' }
-    }], Object.assign({}, configLayoutBase, { yaxis: { automargin: true } }), configPlotly);
-
-    // 2. GRAFICO FAIXA ETÁRIA
-    Plotly.newPlot('graficoFaixaPerfil', [{
-        type: 'bar', x: Object.keys(contagemFaixa), y: Object.values(contagemFaixa), marker: { color: '#3b82f6' }
-    }], Object.assign({}, configLayoutBase, { xaxis: { type: 'category', automargin: true } }), configPlotly);
-
-    // 3. GRAFICO CONCLUSÃO
-    Plotly.newPlot('graficoConclusaoPerfil', [{
-        type: 'pie', labels: Object.keys(contagemConclusao), values: Object.values(contagemConclusao), hole: 0.4, textinfo: 'percent'
-    }], Object.assign({}, configLayoutBase, { margin: { t: 10, r: 10, b: 10, l: 10 }, legend: { orientation: 'h', y: -0.1 } }), configPlotly);
-
-    // 4. GRAFICO SEXO
-    Plotly.newPlot('graficoSexoPerfil', [{
-        type: 'pie', labels: Object.keys(contagemSexo), values: Object.values(contagemSexo), marker: { colors: ['#ec4899', '#1d4ed8'] }, textinfo: 'label+percent'
-    }], Object.assign({}, configLayoutBase, { margin: { t: 10, r: 10, b: 10, l: 10 }, showlegend: false }), configPlotly);
+    Plotly.newPlot('graficoIdade', dataIdade, {
+        margin: { t: 30, b: 30, l: 120, r: 20 }, 
+        
+        yaxis: { autorange: 'reversed' }
+    }, {responsive: true});
 }

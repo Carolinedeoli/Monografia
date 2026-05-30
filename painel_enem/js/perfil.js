@@ -166,6 +166,9 @@ function filtrarEAtualizarPainelPerfil() {
 
     // 4. Envia o resultado final filtrado para calcular e atualizar a tela
     atualizarCardsPerfil();
+    atualizarTabelasEsquerda();
+    atualizarGraficosPerfil();
+    atualizarTabelaConclusao();
 }
 
 /* =========================================

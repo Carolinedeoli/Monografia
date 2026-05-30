@@ -422,24 +422,26 @@ h2 {
     display: inline-block;
 }
 
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 5px; /* <--- REDUZIDO PARA 5px */
+    flex-shrink: 0;
+}
 .filtros-card-perfil {
     display: none;
     position: absolute;
     top: 48px;
     right: 0;
     width: 280px;
-
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-
     box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.08);
-
     padding: 20px;
-
     flex-direction: column;
     gap: 16px;
-
     max-height: 80vh;
     overflow-y: auto;
 }
@@ -493,3 +495,111 @@ h2 {
 }
 
 
+/* =========================================================
+   GRID ESPECÍFICO DA PÁGINA PERFIL (3 COLUNAS)
+========================================================= */
+.dashboard-grid-perfil {
+    display: grid;
+    grid-template-columns: 0.75fr 1.15fr 1fr; 
+    gap: 15px;
+    margin-top: -10px; /* <--- ALTA PRIORIDADE: Mude de 10px para -10px ou -20px */
+    width: 100%;
+}
+
+.painel-coluna {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px; /* Aumenta a altura mínima da coluna */
+}
+
+.painel-coluna h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
+    text-align: center;
+    font-weight: 600;
+}
+
+.painel-coluna-graficos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Ajuste para gráficos pequenos empilhados */
+.grafico-container-pequeno { 
+    height: 180px; 
+    width: 100%; 
+}
+
+/* Ajuste para o gráfico de barras vertical que precisa de mais altura */
+.grafico-container-medio { 
+    height: 300px; 
+    width: 100%; 
+}
+
+.grafico-container {
+    width: 100%;
+    height: 320px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.tabela-container-mini {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+}
+.tabela-mini {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.tabela-mini th, .tabela-mini td {
+    padding: 9px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+/* Estilo unificado para todas as tabelas do painel */
+.tabela-estilo-painel {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+.tabela-estilo-painel th, 
+.tabela-estilo-painel td {
+    padding: 8px 9px;  /* Reduzi o padding horizontal para caber melhor na coluna estreita */
+    font-size: 11px;    /* Reduzi levemente o tamanho da fonte */
+    border-bottom: 2px solid #ccc; 
+    text-align: left;
+}
+
+.tabela-estilo-painel th {
+    font-weight: bold;
+    border-bottom: 3px solid #999; 
+    position: sticky;
+    top: 0;
+    color: #333;
+}
+#graficoSexo {
+    height: 90px; /* Reduzir a altura deixa a barra visualmente mais fina */
+    width: 100%;
+}
+/* Responsividade da Página Perfil */
+@media (max-width: 1200px) {
+    .dashboard-grid-perfil { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid-perfil { grid-template-columns: 1fr; }
+}
