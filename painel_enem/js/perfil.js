@@ -39,15 +39,19 @@ async function iniciarPerfil() {
         await db.instantiate(bundle.mainModule, bundle.pthreadModule);
         URL.revokeObjectURL(workerUrl);
         
+    
         conn = await db.connect();
-        const urlBaseDoSite = window.location.origin;
-
-        await db.registerFileURL('ENEM_2019.parquet', `${urlBaseDoSite}/dados/ENEM_2019.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
-        await db.registerFileURL('ENEM_2020.parquet', `${urlBaseDoSite}/dados/ENEM_2020.txt`, duckdb.DuckDBDataProtocol.HTTP, false);        
-        await db.registerFileURL('ENEM_2021.parquet', `${urlBaseDoSite}/dados/ENEM_2021.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
-        await db.registerFileURL('ENEM_2022.parquet', `${urlBaseDoSite}/dados/ENEM_2022.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
-        await db.registerFileURL('ENEM_2023.parquet', `${urlBaseDoSite}/dados/ENEM_2023.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
         
+        // 🌟 CORREÇÃO PARA A NUVEM: Descobre o caminho exato da pasta atual
+        // Isso garante que funcione tanto no seu computador quanto no GitHub Pages
+        const urlBaseDoSite = window.location.origin + window.location.pathname;
+
+        // Registra os arquivos Parquet com o caminho adaptável corrigido
+        await db.registerFileURL('ENEM_2019.parquet', `${urlBaseDoSite}dados/ENEM_2019.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
+        await db.registerFileURL('ENEM_2020.parquet', `${urlBaseDoSite}dados/ENEM_2020.txt`, duckdb.DuckDBDataProtocol.HTTP, false);        
+        await db.registerFileURL('ENEM_2021.parquet', `${urlBaseDoSite}dados/ENEM_2021.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
+        await db.registerFileURL('ENEM_2022.parquet', `${urlBaseDoSite}dados/ENEM_2022.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
+        await db.registerFileURL('ENEM_2023.parquet', `${urlBaseDoSite}dados/ENEM_2023.txt`, duckdb.DuckDBDataProtocol.HTTP, false);
         preencherSelectAnoRealPerfil();
         
         
