@@ -1,73 +1,40 @@
-function atualizarTabelasEsquerda() {
-    const base = perfilEstado.dadosFiltrados;
-    console.log("Atualizando tabelas com:", base.length, "linhas.");
+export function renderizarTabelasInterface(escola, dep, conclusao, labels) {
+    // Garante que o objeto existirá para não dar erro de undefined
+    const lb = labels || {};
+    const lbEscola = lb.ESCOLA || window.LABELS_ESCOLA || {};
+    const lbDep = lb.DEP_ADM || window.LABELS_DEP_ADM || {};
+    const lbConclusao = lb.CONCLUSAO || window.LABELS_CONCLUSAO || {};
 
-    function gerarTabela(idContainer, coluna, titulo) {
-    const container = document.getElementById(idContainer);
-    if (!container) return;
+    const criarHtmlTabela = (dados, col, titulo, labelMap) => {
+        let total = dados.reduce((s, l) => s + Number(l.qtd), 0);
+        let html = `<table class="tabela-estilo-painel"><thead><tr><th>${titulo}</th><th>% Participantes</th></tr></thead><tbody>`;
+        
+        dados.forEach(l => {
+            let nome = labelMap ? (labelMap[String(l[col])] || l[col]) : l[col];
+            let qtdNumerica = Number(l.qtd);
+            let perc = total > 0 ? ((qtdNumerica / total) * 100).toFixed(1) : 0;
+            html += `<tr><td>${nome || "Não Informado"}</td><td>${perc}%</td></tr>`;
+        });
+        return html + "</tbody></table>";
+    };
 
-    const contagem = {};
-    let totalGeral = 0;
-
-    perfilEstado.dadosFiltrados.forEach(linha => {
-        const val = linha[coluna] || "Não Informado";
-        const peso = parseInt(linha.TOTAL_PEOPLE) || 0;
-        contagem[val] = (contagem[val] || 0) + peso;
-        totalGeral += peso;
-    });
-
-    // 🌟 AQUI USAMOS A CLASSE: tabela-estilo-painel
-    let html = `<table class="tabela-estilo-painel">
-                  <thead>
-                    <tr>
-                        <th>${titulo}</th>
-                        <th>% de Participantes</th>
-                    </tr>
-                  </thead>
-                  <tbody>`;
-    
-    for (let key in contagem) {
-        let perc = totalGeral > 0 ? ((contagem[key] / totalGeral) * 100).toFixed(1) : 0;
-        html += `<tr>
-                    <td>${key}</td>
-                    <td>${perc}%</td>
-                 </tr>`;
+    if (document.getElementById("tabelaEscola")) {
+        document.getElementById("tabelaEscola").innerHTML = criarHtmlTabela(escola, "tipo_escola", "Escola", lbEscola);
     }
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-}
-
-    gerarTabela("tabelaEscola", "tipo_escola", "Escola");
-    gerarTabela("tabelaDepAdm", "dep_adm", "Dependência");
-}
-
-function atualizarTabelaConclusao() {
-    const base = perfilEstado.dadosFiltrados;
-    const container = document.getElementById('tabelaConclusao');
-    
-    const dados = {};
-    let totalGeral = 0;
-
-    base.forEach(l => {
-        const val = l.TP_ST_CONCLUSAO || "Não Informado";
-        const peso = parseInt(l.TOTAL_PEOPLE) || 0;
-        dados[val] = (dados[val] || 0) + peso;
-        totalGeral += peso;
-    });
-
-    let html = `<table class="tabela-estilo-painel">
-                  <thead><tr><th>Situação</th><th>Nº de Participantes</th><th>% de Participantes</th></tr></thead>
-                  <tbody>`;
-    
-    for (let key in dados) {
-        let qtd = dados[key];
-        let perc = totalGeral > 0 ? ((qtd / totalGeral) * 100).toFixed(1) : 0;
-        html += `<tr>
-                    <td>${key}</td>
-                    <td>${qtd.toLocaleString('pt-BR')}</td>
-                    <td>${perc}%</td>
-                 </tr>`;
+    if (document.getElementById("tabelaDepAdm")) {
+        document.getElementById("tabelaDepAdm").innerHTML = criarHtmlTabela(dep, "dep_adm", "Dependência", lbDep);
     }
-    html += `</tbody></table>`;
-    container.innerHTML = html;
+
+    const containerConclusao = document.getElementById("tabelaConclusao");
+    if (containerConclusao) {
+        let totalC = conclusao.reduce((s, l) => s + Number(l.qtd), 0);
+        let htmlC = `<table class="tabela-estilo-painel"><thead><tr><th>Situação</th><th>Nº Participantes</th><th>% Participantes</th></tr></thead><tbody>`;
+        conclusao.forEach(l => {
+            let nomeConclusao = lbConclusao[String(l.TP_ST_CONCLUSAO)] || l.TP_ST_CONCLUSAO;
+            let qtdNumerica = Number(l.qtd);
+            let perc = totalC > 0 ? ((qtdNumerica / totalC) * 100).toFixed(1) : 0;
+            htmlC += `<tr><td>${nomeConclusao || "Não Informado"}</td><td>${qtdNumerica.toLocaleString('pt-BR')}</td><td>${perc}%</td></tr>`;
+        });
+        containerConclusao.innerHTML = htmlC + "</tbody></table>";
+    }
 }

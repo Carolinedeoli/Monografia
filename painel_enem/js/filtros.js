@@ -31,7 +31,7 @@ function preencherFiltros(){
     preencherCheckboxLista("filtroUF", "estado_prova");
     preencherCheckboxLista("filtroEscola", "tipo_escola");
     preencherCheckboxLista("filtroDepAdm", "dep_adm");
-
+    preencherCheckboxLista("filtroRedacao", "motivo_status");
     // 3. Vincula os eventos de mudança para recarregar os gráficos automaticamente
     configurarEventosFiltros();
 }
@@ -117,13 +117,14 @@ function obterFiltrosSelecionados() {
     const ufs = Array.from(document.querySelectorAll('#filtroUF input:checked')).map(cb => cb.value);
     const escolas = Array.from(document.querySelectorAll('#filtroEscola input:checked')).map(cb => cb.value);
     const depAdms = Array.from(document.querySelectorAll('#filtroDepAdm input:checked')).map(cb => cb.value);
-
+    const depReds = Array.from(document.querySelectorAll('#filtroRedacao input:checked')).map(cb => cb.value);
     // Se o array voltar vazio (nada marcado), assumimos "Todos" para rodar o script sem quebras
     return {
         ano: ano,
         ufs: ufs.length > 0 ? ufs : "Todos",
         escolas: escolas.length > 0 ? escolas : "Todos",
-        depAdms: depAdms.length > 0 ? depAdms : "Todos"
+        depAdms: depAdms.length > 0 ? depAdms : "Todos",
+        depReds: depReds.length > 0 ? depReds : "Todos"
     };
 }
 

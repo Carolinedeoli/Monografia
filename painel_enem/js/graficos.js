@@ -40,12 +40,20 @@ function atualizarGraficoInscritos(base){
         x: anos,
         y: participantes,
         mode: "lines+markers",
-        name: "Participantes"
+        name: "Presentes"
     };
 
     let layout = {
 
     height: 180,
+
+    // 🌟 ADICIONADO: Ativa o hover unificado no eixo X e estiliza o card
+    hovermode: 'x unified',
+    hoverlabel: {
+        bgcolor: '#ffffff',
+        font: { color: '#333333', size: 13 },
+        bordercolor: '#e0e0e0'
+    },
 
     margin: {
         t: 30,
@@ -92,7 +100,6 @@ function atualizarGraficoPresenca(base){
             resumo[ano] = {
                 dia1: 0,
                 dia2: 0,
-                participantes: 0,
                 redacoes: 0
             };
         }
@@ -102,9 +109,6 @@ function atualizarGraficoPresenca(base){
 
         resumo[ano].dia2 +=
             Number(linha.qtd_presenca_dia_2 || 0);
-
-        resumo[ano].participantes +=
-            Number(linha.qtd_participantes || 0);
 
         resumo[ano].redacoes +=
             Number(linha.qtd_redacoes_validas || 0);
@@ -121,10 +125,6 @@ function atualizarGraficoPresenca(base){
 
     let dia2 = anos.map(
         ano => resumo[ano].dia2
-    );
-
-    let participantes = anos.map(
-        ano => resumo[ano].participantes
     );
 
     let redacoes = anos.map(
@@ -147,13 +147,6 @@ function atualizarGraficoPresenca(base){
 
     let trace3 = {
         x: anos,
-        y: participantes,
-        mode: "lines+markers",
-        name: "Participantes"
-    };
-
-    let trace4 = {
-        x: anos,
         y: redacoes,
         mode: "lines+markers",
         name: "Redações Válidas"
@@ -162,6 +155,14 @@ function atualizarGraficoPresenca(base){
     let layout = {
 
     height: 180,
+
+    // 🌟 ADICIONADO: Ativa o hover unificado no eixo X e estiliza o card
+    hovermode: 'x unified',
+    hoverlabel: {
+        bgcolor: '#ffffff',
+        font: { color: '#333333', size: 13 },
+        bordercolor: '#e0e0e0'
+    },
 
     margin: {
         t: 30,
@@ -184,7 +185,7 @@ function atualizarGraficoPresenca(base){
     };
     Plotly.newPlot(
         "graficoPresenca",
-        [trace1, trace2, trace3, trace4],
+        [trace1, trace2, trace3],
         layout,
         {responsive: true}
     );

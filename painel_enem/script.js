@@ -97,7 +97,9 @@ function atualizarPainel(){
 
         let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
 
-        return bateAno && bateUF && bateEscola && bateDep;
+        let bateRed = filtros.depReds === "Todos" || filtros.depReds.includes(linha.motivo_status);
+
+        return bateAno && bateUF && bateEscola && bateDep && bateRed;
     });
 
     // Filtro para Média (Ignora o select de Ano, mantendo o histórico de evolução)
@@ -108,7 +110,9 @@ function atualizarPainel(){
 
         let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
 
-        return bateUF && bateEscola && bateDep;
+        let bateRed = filtros.depReds === "Todos" || filtros.depReds.includes(linha.motivo_status);
+
+        return bateUF && bateEscola && bateDep && bateRed;
     });
 
     // Filtro da Redação (A tabela obedece a todos os filtros, incluindo o Ano)
@@ -121,7 +125,9 @@ function atualizarPainel(){
 
         let bateDep = filtros.depAdms === "Todos" || filtros.depAdms.includes(linha.dep_adm);
 
-        return bateAno && bateUF && bateEscola && bateDep;
+        let bateRed = filtros.depReds === "Todos" || filtros.depReds.includes(linha.motivo_status);
+
+        return bateAno && bateUF && bateEscola && bateDep  && bateRed;
     });
 
     // Executa a renderização dos componentes visuais com os dados estruturados

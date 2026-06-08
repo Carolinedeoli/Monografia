@@ -13,7 +13,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
   # =========================================================
   # LABELS
   # =========================================================
-  
+
   labels_escolaridade <- c(
     "A" = "Nunca estudou",
     "B" = "Não completou EF (até 5º ano)",
@@ -23,7 +23,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
     "F" = "Superior completo",
     "G" = "Pós-graduação"
   )
-  
+
   labels_renda <- c(
     "A" = "Nenhuma renda",
     "B" = "Até 1 salário mínimo",
@@ -43,7 +43,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
     "P" = "De 15 a 20 salários mínimos",
     "Q" = "Acima de 20 salários mínimos"
   )
-  
+
   labels_celular <- c(
     "A" = "Não possui",
     "B" = "1 celular",
@@ -51,7 +51,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
     "D" = "3 celulares",
     "E" = "4 ou mais celulares"
   )
-  
+
   labels_computador <- c(
     "A" = "Não possui",
     "B" = "1 computador",
@@ -59,12 +59,12 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
     "D" = "3 computadores",
     "E" = "4 ou mais computadores"
   )
-  
+
   labels_internet <- c(
     "A" = "Não",
     "B" = "Sim"
   )
-  
+
   # =========================================================
   # 1. FILTRAGEM INICIAL
   # =========================================================
@@ -127,20 +127,20 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
       celulares = Q022,
       computadores = Q024,
       internet = Q025
-    ) %>%
-    
+    ) >%
+
     mutate(
-      
+
       # =====================================================
       # TIPAGEM
       # =====================================================
-      
+
       NU_INSCRICAO = as.character(NU_INSCRICAO),
-      
+
       ANO = as.integer(ANO),
-      
+
       moradores = as.numeric(moradores),
-      
+
       across(
         c(
           NU_NOTA_MT,
@@ -157,11 +157,11 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         ),
         as.numeric
       ),
-      
+
       # =====================================================
-      # CATEGÓRICAS
+    CATEGÓRICAS
       # =====================================================
-      
+
       TP_FAIXA_ETARIA = case_when(
         TP_FAIXA_ETARIA == 1  ~ "Menor de 17 anos",
         TP_FAIXA_ETARIA == 2  ~ "17 anos",
@@ -185,13 +185,13 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         TP_FAIXA_ETARIA == 20 ~ "Maior de 70 anos",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_SEXO = case_when(
         TP_SEXO == "M" ~ "Masculino",
         TP_SEXO == "F" ~ "Feminino",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_ESTADO_CIVIL = case_when(
         TP_ESTADO_CIVIL == 0 ~ "Não Informado",
         TP_ESTADO_CIVIL == 1 ~ "Solteiro(a)",
@@ -200,7 +200,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         TP_ESTADO_CIVIL == 4 ~ "Viúvo(a)",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_COR_RACA = case_when(
         TP_COR_RACA == 0 ~ "Não Informado",
         TP_COR_RACA == 1 ~ "Branca",
@@ -211,7 +211,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         TP_COR_RACA == 6 ~ "Não Informado",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_NACIONALIDADE = case_when(
         TP_NACIONALIDADE == 0 ~ "Não Informado",
         TP_NACIONALIDADE == 1 ~ "Brasileiro(a)",
@@ -220,14 +220,14 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         TP_NACIONALIDADE == 4 ~ "Brasileiro(a) nascido(a) no exterior",
         TRUE ~ "Não Informado"
       ),
-      
+
       tipo_escola = case_when(
         tipo_escola == 1 ~ "Não Informado",
         tipo_escola == 2 ~ "Pública",
         tipo_escola == 3 ~ "Privada",
         TRUE ~ "Não Informado"
       ),
-      
+
       dep_adm = case_when(
         dep_adm == 1 ~ "Federal",
         dep_adm == 2 ~ "Estadual",
@@ -235,29 +235,29 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         dep_adm == 4 ~ "Privada",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_ST_CONCLUSAO = case_when(
         TP_ST_CONCLUSAO == 1 ~
           "Já concluí o Ensino Médio",
-        
-        TP_ST_CONCLUSAO == 2 ~ 
+
+        TP_ST_CONCLUSAO == 2 ~
           "Estou cursando e concluirei o Ensino Médio nesse ano",
-        
-        TP_ST_CONCLUSAO == 3 ~ 
+
+        TP_ST_CONCLUSAO == 3 ~
           "Estou cursando e concluirei o Ensino Médio após esse ano",
-        
+
         TP_ST_CONCLUSAO == 4 ~
           "Não concluí e não estou cursando o Ensino Médio",
-        
+
         TRUE ~ "Não Informado"
       ),
-      
+
       IN_TREINEIRO = case_when(
         IN_TREINEIRO == 1 ~ "Sim",
         IN_TREINEIRO == 0 ~ "Não",
         TRUE ~ "Não Informado"
       ),
-      
+
       TP_ANO_CONCLUIU = case_when(
         TP_ANO_CONCLUIU == 0  ~ "Não Informado",
         TP_ANO_CONCLUIU == 1  ~ as.character(2021),
@@ -275,45 +275,45 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
         TP_ANO_CONCLUIU == 13 ~ as.character(2009),
         TP_ANO_CONCLUIU == 14 ~ as.character(2008),
         TP_ANO_CONCLUIU == 15 ~ as.character(2007),
-        
+
         TP_ANO_CONCLUIU == 16 ~ paste(
           "Antes de 2007"
         ),
-        
+
         TRUE ~ "Não Informado"
       ),
-      
+
       escolaridade_mae = case_when(
         escolaridade_mae %in% names(labels_escolaridade) ~
           labels_escolaridade[escolaridade_mae],
         TRUE ~ "Não Informado"
       ),
-      
+
       renda_familiar = case_when(
         renda_familiar %in% names(labels_renda) ~
           labels_renda[renda_familiar],
         TRUE ~ "Não Informado"
       ),
-      
+
       celulares = case_when(
         celulares %in% names(labels_celular) ~
           labels_celular[celulares],
         TRUE ~ "Não Informado"
       ),
-      
+
       computadores = case_when(
         computadores %in% names(labels_computador) ~
           labels_computador[computadores],
         TRUE ~ "Não Informado"
       ),
-      
+
       internet = case_when(
         internet %in% names(labels_internet) ~
           labels_internet[internet],
         TRUE ~ "Não Informado"
       )
     )
-  
+
   # =========================================================
   # 5. BASE FINAL
   # =========================================================

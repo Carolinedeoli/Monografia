@@ -15,11 +15,11 @@ library(patchwork)
 #===============================================================================
 #                 IMPORTANDO BASE
 #===============================================================================
-#Microdados 2022
-dados_2022 <- read_delim("DADOS/MICRODADOS_ENEM_2022.csv", 
+#Microdados 2023
+dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv", 
                          delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
-#itens_2022 <- read_delim("DADOS/ITENS_PROVA_2022.csv", 
+#itens_2023 <- read_delim("DADOS/ITENS_PROVA_2023.csv", 
 #                         delim = ";", escape_double = FALSE, trim_ws = TRUE)
 #microdados 2024
 
@@ -31,8 +31,8 @@ dados_2022 <- read_delim("DADOS/MICRODADOS_ENEM_2022.csv",
 
 ##resultados_2024 <-read_delim("RESULTADOS_2024.csv", 
 ##                             delim = ";", escape_double = FALSE, trim_ws = TRUE)
-##View(dados_2022)
-##View(itens_2022)
+##View(dados_2023)
+##View(itens_2023)
 ##View(participantes_2024)
 ##View(itens_2024)
 ##View(resultados_2024)
@@ -41,10 +41,10 @@ dados_2022 <- read_delim("DADOS/MICRODADOS_ENEM_2022.csv",
 #======================================================================================
 # DESCRITIVAS COM A BASE COMPLETA
 #======================================================================================
-dimensão_completa <- dim(dados_2022)
+#dimensão_completa <- dim(dados_2023)
 
 # #RESUMO BASE -------------------------------------------------------------------
-# tabela_resumo <- dados_2022 %>%
+# tabela_resumo <- dados_2023 %>%
 #   summarise(
 #     `Total de Inscritos (Linhas)` = n(),
 #     `Presentes: Ciências da Natureza (CN)` = sum(TP_PRESENCA_CN == 1, na.rm = TRUE),
@@ -85,7 +85,7 @@ dimensão_completa <- dim(dados_2022)
 # #REDAÇÃO-------------------------------------------------------------------------
 # 
 # # 1. Criar a contagem por categoria
-# tabela_redacao <- dados_2022 %>%
+# tabela_redacao <- dados_2023 %>%
 #   group_by(TP_STATUS_REDACAO) %>%
 #   summarise(Quantidade = n()) %>%
 #   mutate(
@@ -111,7 +111,7 @@ dimensão_completa <- dim(dados_2022)
 # 
 # #NOTAS--------------------------------------------------------------------------
 # # 1. Calculando todas as estatísticas 
-# tabela_notas_1 <- dados_2022 %>%
+# tabela_notas_1 <- dados_2023 %>%
 #   summarise(across(
 #     starts_with("NU_NOTA_"), 
 #     list(
@@ -148,13 +148,13 @@ dimensão_completa <- dim(dados_2022)
 # Retirando todos os alunos que não estiveram presentes em 
 #ambos os dias e tiveram as redações aprovadas
 
-a <- dados_2022 %>%
+a <- dados_2023 %>%
   filter(
-    TP_STATUS_REDACAO == 1,
     TP_PRESENCA_CN == 1,
     TP_PRESENCA_CH == 1,
     TP_PRESENCA_LC == 1,
-    TP_PRESENCA_MT == 1
+    TP_PRESENCA_MT == 1,
+    TP_STATUS_REDACAO == 1
   )
 #testandos se eliminou todos
 #----
@@ -188,6 +188,7 @@ a <- dados_2022 %>%
 
 #Retirando os que possuem nota 0 em alguma prova objetiva ou zerou todas as competências da redação
 #----
+objetivas <- c("NU_NOTA_CN", "NU_NOTA_CH", "NU_NOTA_LC", "NU_NOTA_MT")
 col_notas <- c("NU_NOTA_CN", "NU_NOTA_CH", "NU_NOTA_LC", "NU_NOTA_MT", "NU_NOTA_REDACAO")
 b <- a %>%
   filter(if_all(all_of(col_notas), ~ !is.na(.x) & .x > 0))
@@ -195,12 +196,21 @@ b <- b %>%
   mutate(desempenho = rowSums(across(all_of(col_notas))) / 5)
 
 dados_enem_presentes <- b
+#===============================================================================
+#     MANTENDO APENAS COLUNAS ÚTEIS
+#===============================================================================
 
+dados_enem_presentes <- dados_enem_presentes %>%
+  select(NU_INSCRICAO, NU_ANO, SG_UF_PROVA, TP_FAIXA_ETARIA, TP_SEXO, TP_COR_RACA, TP_ST_CONCLUSAO, 
+         TP_ANO_CONCLUIU, TP_ESCOLA, IN_TREINEIRO, TP_DEPENDENCIA_ADM_ESC, 
+         NU_NOTA_MT, NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_REDACAO, desempenho,
+         NU_NOTA_COMP1, NU_NOTA_COMP2, NU_NOTA_COMP3, NU_NOTA_COMP4, NU_NOTA_COMP5,
+         Q002,Q006, Q025, Q022, Q024)
 #===============================================================================
 #Criação de variável desempenho (média simples de todas as notas)
 
-dados_enem_presentes <- dados_enem_presentes %>%
-  mutate(desempenho = rowSums(across(all_of(col_notas))) / 5)
+#dados_enem_presentes <- dados_enem_presentes %>%
+#  mutate(desempenho = rowSums(across(all_of(col_notas))) / 5)
 #===============================================================================
 
 # =====================================================================================
@@ -221,24 +231,10 @@ dados_enem_presentes$TP_FAIXA_ETARIA <- factor(
 dados_enem_presentes$TP_SEXO <- factor(dados_enem_presentes$TP_SEXO, 
                                        levels = c('M','F'), labels=c('Masculino','Feminino'))
 
-dados_enem_presentes$TP_ESTADO_CIVIL <- factor(
-  dados_enem_presentes$TP_ESTADO_CIVIL,
-  levels = c(0,1,2,3,4),
-  labels=c('Não informado','Solteiro(a)','Casado(a)/Companheiro(a)',
-           'Divorciado(a)/Separado(a)','Viúvo(a)')
-)
-
 dados_enem_presentes$TP_COR_RACA <- factor(
   dados_enem_presentes$TP_COR_RACA,
   levels = c(0,1,2,3,4,5,6),
   labels=c('Não declarado','Branca','Preta','Parda','Amarela','Indígena','Não dispõe')
-)
-
-dados_enem_presentes$TP_NACIONALIDADE <- factor(
-  dados_enem_presentes$TP_NACIONALIDADE,
-  levels = c(0,1,2,3,4),
-  labels=c('Não informado','Brasileiro(a)','Naturalizado(a)','Estrangeiro(a)',
-           'Brasileiro(a) nascido(a) no exterior')
 )
 
 dados_enem_presentes$TP_ESCOLA <- factor(
@@ -247,11 +243,6 @@ dados_enem_presentes$TP_ESCOLA <- factor(
   labels=c('Não respondeu','Pública', 'Privada')
 )
 
-dados_enem_presentes$TP_ENSINO <- factor(
-  dados_enem_presentes$TP_ENSINO,
-  levels = c(1,2),
-  labels=c('Ensino Regular','Educação Especial')
-)
 
 dados_enem_presentes$TP_DEPENDENCIA_ADM_ESC <-factor(
   dados_enem_presentes$TP_DEPENDENCIA_ADM_ESC,
@@ -263,14 +254,14 @@ dados_enem_presentes$TP_ST_CONCLUSAO <-factor(
   dados_enem_presentes$TP_ST_CONCLUSAO,
   levels = c(1,2,3,4),
   labels = c('Já concluí o Ensino Médio',
-             'Estou cursando e concluirei o Ensino Médio em 2022',
-             'Estou cursando e concluirei o Ensino Médio após 2022',
+             'Estou cursando e concluirei o Ensino Médio em 2023',
+             'Estou cursando e concluirei o Ensino Médio após 2023',
              'Não concluí e não estou cursando o Ensino Médio'))
 
 dados_enem_presentes$TP_ANO_CONCLUIU <- factor(
   dados_enem_presentes$TP_ANO_CONCLUIU,
   levels = 0:17,
-  labels = c("Não informado","2022","2021","2020","2019","2018","2017","2016",
+  labels = c("Não informado","2023","2021","2020","2019","2018","2017","2016",
              "2015","2014","2013","2012","2011","2010","2009","2008","2007",
              "Antes de 2007")
 )
@@ -303,27 +294,15 @@ labels_escolaridade <- c(
 
 dados_enem_presentes <- dados_enem_presentes %>%
   rename(
-    escolaridade_pai = Q001,
     escolaridade_mae = Q002
   ) %>%
   mutate(
-    escolaridade_pai = na_if(escolaridade_pai, "H"),
     escolaridade_mae = na_if(escolaridade_mae, "H"),
     
-    escolaridade_pai = factor(escolaridade_pai,
-                              levels = names(labels_escolaridade),
-                              labels = labels_escolaridade),
     
     escolaridade_mae = factor(escolaridade_mae,
                               levels = names(labels_escolaridade),
                               labels = labels_escolaridade)
-  )
-
-
-dados_enem_presentes <- dados_enem_presentes %>%
-  rename(moradores = Q005) %>%
-  mutate(
-    moradores = as.numeric(moradores)
   )
 
 
@@ -411,13 +390,8 @@ dados_enem_presentes <- dados_enem_presentes %>%
 #     MANTENDO APENAS COLUNAS ÚTEIS
 #===============================================================================
 #colnames(dados_enem_presentes)
-dados_filtrado_2022 <- dados_enem_presentes %>%
-  select(NU_INSCRICAO, NU_ANO, SG_UF_PROVA, TP_FAIXA_ETARIA, TP_SEXO, TP_COR_RACA, TP_ST_CONCLUSAO, 
-         TP_ANO_CONCLUIU, TP_ESCOLA, IN_TREINEIRO, TP_DEPENDENCIA_ADM_ESC, 
-         NU_NOTA_MT, NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_REDACAO, desempenho,
-         NU_NOTA_COMP1, NU_NOTA_COMP2, NU_NOTA_COMP3, NU_NOTA_COMP4, NU_NOTA_COMP5,
-         escolaridade_mae,renda_familiar, internet, celulares, computadores)
-write.csv(dados_filtrado_2022, "ENEM_2022.csv", row.names = FALSE)
+
+write.csv(dados_enem_presentes, "ENEM_2023.csv", row.names = FALSE)
 
 
 enem_2023 <- read_csv("DADOS/ENEM_2023.csv")

@@ -49,13 +49,24 @@ processar_ano_enem <- function(ano_prova) {
         TRUE ~ "Não Informado"
       ),
       
+      motivo_status = case_when(
+        TP_STATUS_REDACAO == 1 ~ "Válida",
+        TP_STATUS_REDACAO == 2 ~ "Anulada",
+        TP_STATUS_REDACAO == 3 ~ "Cópia Texto Motivador",
+        TP_STATUS_REDACAO == 4 ~ "Em Branco",
+        TP_STATUS_REDACAO == 6 ~ "Fuga ao Tema",
+        TP_STATUS_REDACAO == 7 ~ "Não Atendimento ao Tipo",
+        TP_STATUS_REDACAO == 8 ~ "Texto Insuficiente",
+        TP_STATUS_REDACAO == 9 ~ "Parte Desconectada",
+        TRUE ~ "Não Compareceu/Outros"
+      ),
       # Lógica de Presença e Participação
       presenca_dia_1 = ifelse(TP_PRESENCA_CH == 1 & TP_PRESENCA_LC == 1, 1, 0),
       presenca_dia_2 = ifelse(TP_PRESENCA_CN == 1 & TP_PRESENCA_MT == 1, 1, 0),
-      participantes = ifelse(presenca_dia_1 == 1 & presenca_dia_2 == 1 & TP_STATUS_REDACAO == 1, 1, 0)
+      participantes = ifelse(presenca_dia_1 == 1 & presenca_dia_2 == 1 & TP_STATUS_REDACAO %in% c(1, 2, 3, 4, 6, 7, 8, 9), 1, 0)
     ) %>%
     # 3. Agrupamento pelas variáveis de perfil
-    group_by(ANO,estado_prova, tipo_escola, dep_adm) %>%
+    group_by(ANO,estado_prova, tipo_escola, dep_adm, motivo_status) %>%
     summarise(
       total_inscritos = as.integer(n()),
       qtd_presenca_dia_1 = as.integer(sum(presenca_dia_1, na.rm = TRUE)),
@@ -72,7 +83,10 @@ processar_ano_enem <- function(ano_prova) {
       as.character(tipo_escola),
     
     dep_adm =
-      as.character(dep_adm)
+      as.character(dep_adm),
+    
+    motivo_status =
+      as.character(motivo_status)
   )
   
   return(base_ano)

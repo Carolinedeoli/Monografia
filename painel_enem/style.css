@@ -178,18 +178,29 @@ h2 {
     display: flex;
 }
 
+/* Espaçamento interno de cada bloco de filtro */
 .filtro-grupo {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;               /* Aumentado de 6px para 10px: afasta o título do conteúdo interno */
+    margin-bottom: 18px;     /* Adicionado: cria uma distância elegante entre um bloco de variável e o próximo */
 }
 
+/* Estilização do nome das variáveis */
 .filtro-titulo {
-    font-size: 13px;
+    font-size: 14px;         /* Ajustado para destacar melhor */
     font-weight: 700;
     color: #002d62; 
-    margin-bottom: 2px;
+    margin-bottom: 4px;      /* Adicionado: garante um espaço extra antes do input/select abaixo dele */
 }
+
+/* Garante o espaçamento correto na lista de checkboxes também */
+.checkbox-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;                /* Aumentado de 6px para 8px para os itens de checkbox não ficarem colados */
+}
+
 
 .filtro-select, .filtro-select-ano {
     font-family: Arial, sans-serif;
@@ -206,12 +217,6 @@ h2 {
 
 .filtro-select-ano {
     width: 85px;
-}
-
-.checkbox-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
 }
 
 .filtro-checkbox-label {
@@ -239,9 +244,9 @@ h2 {
     background-color: #fff;
     color: #64748b;
     border: 1px solid #e2e8f0;
-    padding: 6px 12px;
+    padding: 10px 12px;       /* Aumentado o padding vertical para dar mais corpo ao botão */
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;          /* Aumentado levemente o texto para equilibrar */
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -249,17 +254,11 @@ h2 {
     justify-content: center;
     gap: 6px;
     transition: all 0.2s ease;
-    margin-bottom: 5px; /* Separa o botão do primeiro filtro (Ano) */
-}
-
-.btn-limpar-filtros:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
-    border-color: #cbd5e1;
-}
-
-.btn-limpar-filtros svg {
-    stroke: currentColor;
+    
+    /* SOLUÇÃO DO TAMANHO: Garante que ele ocupe toda a largura disponível no card */
+    width: 100%; 
+    box-sizing: border-box;
+    margin-bottom: 20px;      /* Aumentada a distância entre o botão e o primeiro filtro (Ano) */
 }
 
 /* =========================================
@@ -498,24 +497,82 @@ h2 {
 /* =========================================================
    GRID ESPECÍFICO DA PÁGINA PERFIL (3 COLUNAS)
 ========================================================= */
+/* =========================================================
+   GRID ESPECÍFICO DA PÁGINA PERFIL (3 COLUNAS)
+========================================================= */
 .dashboard-grid-perfil {
     display: grid;
     grid-template-columns: 0.75fr 1.15fr 1fr; 
     gap: 15px;
-    margin-top: -10px; /* <--- ALTA PRIORIDADE: Mude de 10px para -10px ou -20px */
+    margin-top: -9px; /* Mantida a sua margem original */
     width: 100%;
 }
 
+/* Remove o fundo e bordas da coluna pai */
 .painel-coluna {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e0e0e0;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
     display: flex;
     flex-direction: column;
-    min-height: 500px; /* Aumenta a altura mínima da coluna */
+    height: 100% !important;
+    gap: 0px; /* Cria o espaçamento padrão entre os blocos filhos */
 }
+
+/* Aplica o visual de card branco unificado com comportamento flexível vertical */
+.tabela-container-mini, 
+.grafico-container-pequeno, 
+.grafico-container-medio {
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 15px 20px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #e0e0e0 !important;
+    box-sizing: border-box !important;
+    
+    /* Faz o título h3 se isolar no topo e o gráfico ocupar o espaço de baixo */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Mantém as suas alturas originais para as caixas externas */
+.grafico-container-pequeno { height: 160px !important; }
+.grafico-container-medio   { height: 360px !important; }
+
+
+/* Estiliza os títulos internos dos cards brancos */
+.tabela-container-mini h3,
+.grafico-container-pequeno h3,
+.grafico-container-medio h3 {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+    font-size: 15px !important;
+    color: #333 !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+}
+
+
+/* Atualize a classe de container das tabelas */
+.tabela-container-mini {
+    flex: 1 !important;         /* Faz a caixa esticar e ocupar 100% do tamanho restante da coluna */
+    width: 100% !important;
+    height: auto !important;     /* Libera a altura fixa de 190px para ela se adaptar perfeitamente */
+    min-height: 0 !important;
+    overflow: hidden !important; /* 🌟 REMOVE TOTALMENTE A ROLAGEM nos itens conforme solicitado */
+}
+
+/* Garante o comportamento limpo dentro dos seletores do DuckDB e Plotly */
+#tabelaEscola, #tabelaDepAdm, #tabelaConclusao,
+#graficoRaca, #graficoSexo, #graficoIdade {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important; /* 🌟 Bloqueia qualquer rolagem interna indesejada */
+}
+
 
 .painel-coluna h3 {
     margin-top: 0;
@@ -532,18 +589,8 @@ h2 {
     gap: 15px;
 }
 
-/* Ajuste para gráficos pequenos empilhados */
-.grafico-container-pequeno { 
-    height: 180px; 
-    width: 100%; 
-}
 
-/* Ajuste para o gráfico de barras vertical que precisa de mais altura */
-.grafico-container-medio { 
-    height: 300px; 
-    width: 100%; 
-}
-
+/* MANTIDO: Ajuste original */
 .grafico-container {
     width: 100%;
     height: 320px; 
@@ -553,33 +600,23 @@ h2 {
     position: relative;
 }
 
-.tabela-container-mini {
+
+/* Garante que o Plotly e as tabelas ocupem o espaço restante do card perfeitamente */
+.tabela-mini, .tabela-estilo-painel, .js-plotly-plot {
     flex: 1;
-    width: 100%;
-    overflow-y: auto;
+    width: 100% !important;
 }
-.tabela-mini {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
+
 .tabela-mini th, .tabela-mini td {
     padding: 9px;
     border-bottom: 1px solid #eee;
     text-align: left;
 }
 
-/* Estilo unificado para todas as tabelas do painel */
-.tabela-estilo-painel {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: transparent;
-}
-
 .tabela-estilo-painel th, 
 .tabela-estilo-painel td {
-    padding: 8px 9px;  /* Reduzi o padding horizontal para caber melhor na coluna estreita */
-    font-size: 11px;    /* Reduzi levemente o tamanho da fonte */
+    padding: 8px 9px;  
+    font-size: 11px;    
     border-bottom: 2px solid #ccc; 
     text-align: left;
 }
@@ -591,10 +628,13 @@ h2 {
     top: 0;
     color: #333;
 }
-#graficoSexo {
-    height: 90px; /* Reduzir a altura deixa a barra visualmente mais fina */
-    width: 100%;
+/* Força a área interna do gráfico de raça a expandir ao máximo */
+#graficoRaca {
+    height: 100% !important;
+    min-height: 110px !important; /* Garante uma altura mínima para as barras verticais respirarem */
 }
+
+
 /* Responsividade da Página Perfil */
 @media (max-width: 1200px) {
     .dashboard-grid-perfil { grid-template-columns: repeat(2, 1fr); }
@@ -603,3 +643,4 @@ h2 {
 @media (max-width: 768px) {
     .dashboard-grid-perfil { grid-template-columns: 1fr; }
 }
+

@@ -34,13 +34,17 @@ library(kableExtra)
 
 ```{r leitura, include=FALSE}
 #Leitura dos arquivos
-source("leitura_bases.R")
+dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv", 
+                         delim = ";", escape_double = FALSE, trim_ws = TRUE)
+dados_enem_presentes <- read_csv("DOCUMENTOS_ENEM/DADOS/ENEM_2023.csv")
+
 source("descritivas_monografia.R")
 ```
 
 ## Introdução 
 
-Temos inicialmente uma base do ENEM 2023 com 3.933.955 de linhas, entende-se linhas como os participantes inscritos para a prova. E além disso, possuimos 76 colunas com informações sobre o participante, resultados da prova e as repostas do questionário sociodemográfico respondido ao realizar a inscrição pelo site do INEP. 
+Temos inicialmente uma base do ENEM 2023 com 3.933.955 de linhas, entende-se linhas como os participantes inscritos para a prova. E além disso, possuimos 76 colunas com informações sobre o participante, resultados da prova e as respostas do questionário sociodemográfico respondido ao realizar a inscrição pelo site do INEP. 
+
 ```{r tabela_resumo}
 # 1. Criação do objeto (Certifique-se de que termina aqui)
 tabela_resumo <- dados_2023 %>%
@@ -84,6 +88,7 @@ knitr::kable(
 ```
 
 A redação é avaliada por 2 corretores e esses decidem se a redação está valida ou se o participante zera-rá a redação devido a alguns fatores. Em 2023 68,76% das redções dos participantes inscritos foram validadas.
+
 ```{r redacao}
 # 1. Criar a contagem por categoria
 tabela_redacao <- dados_2023 %>%
@@ -204,7 +209,9 @@ tabela_notas_final %>%
 ```
 
 ## Limpeza 
-Após isso foi realizada a restirada dos inscritos que não estiveram presentes em pelomenos um dia de prova e aqueles em que a redação teve uma avaliação diferente de "Sem problemas" e a tabela de médias foi realizada novamente, junto com o acréscimo da variável Desempenho que é a média simples das notas de cada um dos participantes. 
+Após a análise preliminar, foi realizada a retirada dos inscritos que não estiveram presentes em pelomenos um dia de prova, aqueles que obtveram nota zero e aqueles em que a redação teve uma avaliação diferente de "Sem problemas", então a tabela de médias foi realizada novamente, junto com o acréscimo da variável Desempenho que é a média simples das notas de cada um dos participantes. 
+
+Importante salientar que, o participante que zera a redação continua podendo obter notas válidas nas outras áreas, porém fica impossibilitado de concorrer em uma vaga pelo SISU, portanto foram retirados também da base de participantes.
 
 Essa segunda base ficou com um total de 2.569.190 linhas, ou seja em 2023 tivemos 2.569.190 participantes presentes em ambos os dias com redações válidas. 
 

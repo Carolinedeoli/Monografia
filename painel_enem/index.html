@@ -85,6 +85,12 @@
                     <label class="filtro-titulo">Dependência</label>
                     <div class="checkbox-lista" id="filtroDepAdm"></div>
                 </div>
+
+                <div class="filtro-grupo">
+                    <label class="filtro-titulo">Status Redação</label>
+                    <div class="checkbox-lista" id="filtroRedacao"></div>
+                </div>
+
             </div>
         </div>
 
@@ -97,11 +103,11 @@
                     <p id="totalInscritos">0</p>
                 </div>
                 <div class="card">
-                    <h3>Presentes<span class="info" title="Participantes presentes em ambos os dias e redação válida.">ⓘ</span></h3>
+                    <h3>Presentes<span class="info" title="Participantes presentes em ambos os dias.">ⓘ</span></h3>
                     <p id="totalParticipantes">0</p>
                 </div>
                 <div class="card">
-                    <h3>% Presentes<span class="info" title="Porcentagem de participantes presentes em ambos os dias e redação válida com relação ao total de inscritos.">ⓘ</span></h3>
+                    <h3>% Presentes<span class="info" title="Porcentagem de participantes presentes em ambos os dias com relação ao total de inscritos.">ⓘ</span></h3>
                     <p id="percentParticipacao">0%</p>
                 </div>
                 <div class="card">
@@ -278,6 +284,20 @@
 
             </div>
 
+             <!-- ESTADO CIVIL -->
+
+            <div class="filtro-grupo">
+
+                <label   class="filtro-titulo">
+                    Estado Civil
+                </label >
+
+                <div id="filtroEstadocivilPerfil"
+                     class="checkbox-lista">
+                </div>
+
+            </div>
+
             <!-- FAIXA ETÁRIA -->
 
             <div class="filtro-grupo">
@@ -431,72 +451,60 @@
 <div class="dashboard-grid-perfil">
     
     <div class="painel-coluna">
-        <h3>Distribuição por Escola</h3>
-        <div id="tabelaEscola" class="tabela-container-mini"></div>
+        <div class="tabela-container-mini">
+            <h3>Distribuição por Escola</h3>
+            <div id="tabelaEscola"></div>
+        </div>
         
-        <h3 style="margin-top: 20px;">Distribuição por Dependência</h3>
-        <div id="tabelaDepAdm" class="tabela-container-mini"></div>
+        <div class="tabela-container-mini" style="margin-top: 20px;">
+            <h3>Distribuição por Dependência</h3>
+            <div id="tabelaDepAdm"></div>
+        </div>
     </div>
 
     <div class="painel-coluna">
-        <h3>Cor/Raça</h3>
-        <div id="graficoRaca" class="grafico-container-pequeno"></div>
+        <div class="grafico-container-pequeno">
+            <h3>Cor/Raça</h3>
+            <div id="graficoRaca"></div>
+        </div>
         
-        <h3 style="margin-top: 20px;">Situação de Conclusão</h3>
-        <div id="tabelaConclusao" class="tabela-container-mini"></div>
+        <div class="tabela-container-mini" style="margin-top: 20px;">
+            <h3>Situação de Conclusão</h3>
+            <div id="tabelaConclusao"></div>
+        </div>
     </div>
 
     <div class="painel-coluna">
-        <h3>Proporção por Sexo</h3>
-        <div id="graficoSexo" class="grafico-container-pequeno"></div>
+        <div class="grafico-container-pequeno">
+            <h3>Proporção por Sexo</h3>
+            <div id="graficoSexo"></div>
+        </div>
         
-        <h3 style="margin-top: 20px;">Faixa Etária</h3>
-        <div id="graficoIdade" class="grafico-container-medio"></div>
+        <div class="grafico-container-medio" style="margin-top: 20px;">
+            <h3>Faixa Etária</h3>
+            <div id="graficoIdade"></div>
+        </div>
     </div>
           
 </div>
 
-
 </div></main>
 
   
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-
-<!-- =========================================
-     PÁGINA GERAL
-========================================= -->
-
 <script src="js/filtros.js"></script>
-
 <script src="js/cards.js"></script>
-
 <script src="js/graficos.js"></script>
-
 <script src="js/tabelas.js"></script>
 
-<!-- =========================================
-     PÁGINA PERFIL
-========================================= -->
 
 
+<script type="module" src="js/perfil.js"></script>
 
-<script src="js/perfilFiltros.js"></script>
-
-<script src="js/perfilCards.js"></script>
-
-<script src="js/perfilTabelas.js"></script>
-
-<script src="js/perfilGraficos.js"></script>
-<!-- =========================================
-     SCRIPT PRINCIPAL
-========================================= -->
-<script src="js/perfil.js"></script>
 <script src="script.js"></script>
 
 </body>
-
-
 </html>
