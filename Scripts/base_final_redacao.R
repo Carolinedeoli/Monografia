@@ -58,7 +58,7 @@ processar_redacao_enem <- function(ano_prova) {
       numero_pessoas = as.integer(n()),
       .groups = 'drop'
     ) %>%
-    # A mágica acontece aqui: a porcentagem é baseada no TOTAL DO ANO
+    # A porcentagem é baseada no TOTAL DO ANO
     mutate(
       porcentagem = round((numero_pessoas / total_geral_ano) * 100, 5)
     )%>%
@@ -83,4 +83,4 @@ processar_redacao_enem <- function(ano_prova) {
 base_redacao_completa <- bind_rows(processar_redacao_enem(2019),processar_redacao_enem(2020),processar_redacao_enem(2021),processar_redacao_enem(2022), processar_redacao_enem(2023))
 
 #write_json(redacao_completa, "DADOS/painel_redacao_completo.json", dataframe = "rows")
-write.csv(base_redacao_completa, "DOCUMENTOS_ENEM/DADOS/REDAÇÃO.csv", row.names = FALSE)
+#write.csv(base_redacao_completa, "DOCUMENTOS_ENEM/DADOS/REDAÇÃO.csv", row.names = FALSE)

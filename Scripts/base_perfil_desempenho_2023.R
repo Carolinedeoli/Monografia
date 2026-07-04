@@ -1,4 +1,13 @@
 #===============================================================================
+#                 BIBLIOTECAS
+#===============================================================================
+
+library(readr)
+library(dplyr)
+library(tidyr)
+
+
+#===============================================================================
 #                     FUNÇÃO DE LIMPEZA E TRATAMENTO DO ENEM
 #===============================================================================
 
@@ -289,6 +298,8 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
           labels_escolaridade[escolaridade_mae],
         TRUE ~ "Não Informado"
       ),
+      
+      
 
       renda_familiar = case_when(
         renda_familiar %in% names(labels_renda) ~
@@ -332,7 +343,7 @@ limpar_base_enem <- function(dados_raw, ano_corrente) {
       tipo_escola,
       IN_TREINEIRO,
       dep_adm,
-      
+      TP_ESTADO_CIVIL,
       NU_NOTA_MT,
       NU_NOTA_CN,
       NU_NOTA_CH,
@@ -369,4 +380,4 @@ dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv", delim
 dados_filtrado_2023<- limpar_base_enem(dados_2023, ano_corrente = 2023)
 
   # 3. Salva o resultado
-write.csv(dados_filtrado_2023, "DOCUMENTOS_ENEM/DADOS/ENEM_2023.csv", row.names = FALSE)
+write.csv(dados_filtrado_2023, "DOCUMENTOS_ENEM/DADOS/ENEM_2023_categorias.csv", row.names = FALSE)

@@ -21,22 +21,6 @@ dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv",
 
 #itens_2023 <- read_delim("DADOS/ITENS_PROVA_2023.csv", 
 #                         delim = ";", escape_double = FALSE, trim_ws = TRUE)
-#microdados 2024
-
-##participantes_2024 <- read_delim("PARTICIPANTES_2024.csv", 
-##                                delim = ";", escape_double = FALSE, trim_ws = TRUE)
-
-##itens_2024 <- read_delim("ITENS_PROVA_2024.csv", 
-##                                 delim = ";", escape_double = FALSE, trim_ws = TRUE)
-
-##resultados_2024 <-read_delim("RESULTADOS_2024.csv", 
-##                             delim = ";", escape_double = FALSE, trim_ws = TRUE)
-##View(dados_2023)
-##View(itens_2023)
-##View(participantes_2024)
-##View(itens_2024)
-##View(resultados_2024)
-
 
 #======================================================================================
 # DESCRITIVAS COM A BASE COMPLETA
@@ -156,6 +140,7 @@ a <- dados_2023 %>%
     TP_PRESENCA_MT == 1,
     TP_STATUS_REDACAO == 1
   )
+
 #testandos se eliminou todos
 #----
 # auxiliar <- b %>%
@@ -206,6 +191,7 @@ dados_enem_presentes <- dados_enem_presentes %>%
          NU_NOTA_MT, NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_REDACAO, desempenho,
          NU_NOTA_COMP1, NU_NOTA_COMP2, NU_NOTA_COMP3, NU_NOTA_COMP4, NU_NOTA_COMP5,
          Q002,Q006, Q025, Q022, Q024)
+
 #===============================================================================
 #Criação de variável desempenho (média simples de todas as notas)
 
@@ -389,7 +375,6 @@ dados_enem_presentes <- dados_enem_presentes %>%
 #===============================================================================
 #     MANTENDO APENAS COLUNAS ÚTEIS
 #===============================================================================
-#colnames(dados_enem_presentes)
 
 write.csv(dados_enem_presentes, "ENEM_2023.csv", row.names = FALSE)
 

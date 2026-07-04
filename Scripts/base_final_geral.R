@@ -101,6 +101,6 @@ base_painel_completa <- bind_rows(processar_ano_enem(2019),processar_ano_enem(20
 
 # 4. Exportação Única para o seu Painel JS
 #write_json(base_painel_completa, "DADOS/painel_categorias_completo.json", dataframe = "rows")
-write.csv(base_painel_completa, "DOCUMENTOS_ENEM/DADOS/GERAL.csv", row.names = FALSE)
+#write.csv(base_painel_completa, "DOCUMENTOS_ENEM/DADOS/GERAL.csv", row.names = FALSE)
 cat("Processo finalizado! Arquivo com dados originais unificados criado.")
 

@@ -5,28 +5,31 @@
 library(readr)
 library(dplyr)
 library(tidyr)
+library(mirt)
+library(knitr)
+library(kableExtra)
 library(nortest)
 library(scales)
 library(ggplot2)
-library(knitr)
-library(kableExtra)
 library(patchwork)
+
+
 
 #===============================================================================
 #                 IMPORTANDO BASES
 #===============================================================================
 #Microdados 2023
-dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv", 
-                         delim = ";", escape_double = FALSE, trim_ws = TRUE)
-
-itens_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/ITENS_PROVA_2023.csv", 
-                         delim = ";", escape_double = FALSE, trim_ws = TRUE)
+# dados_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/MICRODADOS_ENEM_2023.csv", 
+#                          delim = ";", escape_double = FALSE, trim_ws = TRUE)
+# 
+# itens_2023 <- read_delim("DOCUMENTOS_ENEM/DADOS/ITENS_PROVA_2023.csv", 
+#                          delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
 #===============================================================================
 #                SELECIONAR UM ALUNO
 #===============================================================================
 
-set.seed(08)
+set.seed(0725)
 
 participante_teste <- dados_2023 %>%
   filter(
@@ -72,7 +75,11 @@ participante_teste %>%
     NU_NOTA_CH,
     NU_NOTA_LC,
     NU_NOTA_MT,
-    NU_NOTA_REDACAO
+    NU_NOTA_REDACAO,
+    CO_PROVA_MT,
+    CO_PROVA_LC,
+    CO_PROVA_CN,
+    CO_PROVA_CH
   )
 mean(
   c(
@@ -203,35 +210,102 @@ score_provas <- comparacao %>%
   arrange(desc(acertos))
 
 prova_certa <- score_provas$CO_PROVA[1]
+#------------------
 
+prova_certa <- participante_teste$CO_PROVA_MT
 itens_mt <- itens_2023 %>%
   filter(SG_AREA == "MT",
          CO_PROVA == prova_certa) %>%
   arrange(CO_POSICAO)
 
-#metriz para TRI
+#matriz para TRI
 dados <- itens_2023 %>%
-  filter(SG_AREA == "MT",
-         CO_PROVA == prova_certa) %>%
+  filter(
+    SG_AREA == "MT",
+    CO_PROVA == prova_certa
+  ) %>%
   arrange(CO_POSICAO) %>%
   mutate(
     item_id = CO_POSICAO,
     acerto = resp_mt
+  ) %>%
+  filter(TX_GABARITO != "X")
+
+dados <- dados %>%
+  filter(
+    !is.na(acerto),
+    !is.na(NU_PARAM_A),
+    !is.na(NU_PARAM_B),
+    !is.na(NU_PARAM_C)
   )
 
+
+#-------------------------------------------------------------------------------
+
 theta_data <- dados %>%
-  select(item_id, acerto, CO_HABILIDADE, NU_PARAM_A, NU_PARAM_B,NU_PARAM_C ) %>%
+  select(item_id, acerto, NU_PARAM_A, NU_PARAM_B,NU_PARAM_C ) %>%
   arrange(item_id)
 
-u <- theta_data$acerto   # <- isso é o que TRI usa (0/1)
+u <- theta_data$acerto   
 a <- theta_data$NU_PARAM_A
 b <- theta_data$NU_PARAM_B
 c <- theta_data$NU_PARAM_C
 
+#==================~===========================================================
+##          TESTANDO TRI PARA UM ÚNICO ALUNO MATEMÁTICA 
+#==============================================================================
 
-###########################3
-library(mirt)
+# --- PASSO 1: Criar os 40 pontos de quadratura na distribuição a priori ---
+# Conforme o edital do ENEM: 40 pontos distribuídos em uma Normal Padrão
 
-mod <- mirt(theta_data[, c("acerto")], 1, itemtype = "2PL")
+ G <- 40
+ quad_nodes <- seq(-4, 4, length.out = G)              # Pontos de -4 a 4 (escala theta original)
+ quad_weights <- dnorm(quad_nodes)                     # Pesos da densidade normal padrão
+quad_weights <- quad_weights / sum(quad_weights)       # Normaliza os pesos para somarem 1
 
-#https://cran.r-project.org/web/packages/irtoys/index.html
+# --- PASSO 2: Garantir que vetores de parâmetros estão limpos ---
+
+u_respostas <- as.numeric(theta_data$acerto)
+a_params    <- as.numeric(theta_data$NU_PARAM_A)
+b_params    <- as.numeric(theta_data$NU_PARAM_B)
+c_params    <- as.numeric(theta_data$NU_PARAM_C)
+
+# --- PASSO 3: Calcular a Verossimilhança para cada ponto de quadratura ---
+# Criamos uma matriz para armazenar a probabilidade do padrão de resposta em cada nó
+
+L_theta <- numeric(G)
+
+for (g_idx in 1:G) {
+  theta_g <- quad_nodes[g_idx]
+  
+  # Equação do Modelo Logístico de 3 Parâmetros (3PL)
+  # P(theta) = c + (1 - c) / (1 + exp(-a * (theta - b)))
+  D <- 1
+  
+ 
+  P <- c_params + (1 - c_params) / (D + exp(-a_params * (theta_g - b_params)))
+  
+  # Evita que probabilidades fiquem estritamente em 0 ou 1 (estabilidade numérica)
+  P <- pmax(pmin(P, 1 - 1e-15), 1e-15)
+  
+  # Probabilidade do padrão de respostas observado (Verossimilhança)
+  # L = Produtório de [P^u * (1-P)^(1-u)]
+  L_theta[g_idx] <- exp(sum(u_respostas * log(P) + (1 - u_respostas) * log(1 - P)))
+}
+
+# --- PASSO 4: Aplicar o cálculo do Expected A Posteriori (EAP) ---
+# Conforme a fórmula do edital: Integral(theta * L * f) / Integral(L * f)
+numerador   <- sum(quad_nodes * L_theta * quad_weights)
+denominador <- sum(L_theta * quad_weights)
+
+theta_original <- numerador / denominador
+
+# --- PASSO 5: Aplicar a Transformação Linear para a Escala do ENEM ---
+nota_final_enem <- 100 * theta_original + 500
+
+# --- RESULTADO FINAL ---
+cat("\n============================================\n")
+cat("Nota simulada na escala do ENEM:", round(nota_final_enem, 2), "\n")
+cat("Nota real registrada (para comparar):", participante_teste$NU_NOTA_MT, "\n")
+cat("============================================\n")
+

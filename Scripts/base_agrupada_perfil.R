@@ -21,13 +21,9 @@ for (ano in anos) {
   
   if (file.exists(arquivo_tratado)) {
     cat("Lendo arquivo já tratado de:", ano, "...\n")
-    
-    # Lendo o arquivo (ajuste para delim = ";" se o seu arquivo usar ponto e vírgula)
     base_ano <- read_csv(arquivo_tratado, show_col_types = FALSE)
     
     lista_bases_tratadas[[as.character(ano)]] <- base_ano
-    
-    # 🌟 O ANO entra aqui junto com as colunas categóricas de perfil
     perfil_ano <- base_ano |>
       select(
         ANO,
@@ -50,7 +46,6 @@ for (ano in anos) {
 cat("\n=== PASSO 2: Criando a base unificada DIM_PERFIL_UNICO com coluna ANO ===\n")
 
 df_perfil_unico <- bind_rows(lista_perfis) |>
-  # 🌟 O ANO foi adicionado ao group_by para que a contagem seja separada por ano
   group_by(
     ANO,
     estado_prova, TP_FAIXA_ETARIA, TP_SEXO, TP_COR_RACA, TP_ST_CONCLUSAO,
@@ -63,7 +58,7 @@ df_perfil_unico <- bind_rows(lista_perfis) |>
   # Organiza a ordem visual das colunas na planilha
   select(ID_PERFIL, ANO, TOTAL_PEOPLE, everything())
 
-# Salva o arquivo de perfis com a coluna de Ano (Alimentará a Página de Perfil)
+# Salva o arquivo de perfis com a coluna de Ano 
 write_csv(df_perfil_unico, paste0(caminho_dados, "DIM_PERFIL_UNICO.csv"))
 cat("✅ Tabela DIM_PERFIL_UNICO.csv exportada com sucesso!\n")
 
