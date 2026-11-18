@@ -447,12 +447,13 @@ https://riep.inep.gov.br/server/api/core/bitstreams/e5f9e064-e761-48e9-8f8c-7668
 Para se obter a possibilidade que concluir o ensino médio ou a declaração parcial de proeficiência, o participante deverá ter 18 anos ou mais e atingir o mínimo de 450 pontos em cada área o mínimo de 500 na redação. Em 2023, 290.584 candidados tinham 18 anos ou mais e poderiam tentar emitir o certificado, porém apenas 52,06% desses alcançaram as notas mínimas para tal ação. 
 
 ```{r}
+
 # 1. Processamento dos dados
-tabela_final <- dados_enem_presentes %>%
+tabela_final <- dados_filtrado_2023 %>%
   # Filtrando categorias conforme sua base categórica
-  filter(TP_FAIXA_ETARIA != "17 anos", 
-         TP_ST_CONCLUSAO %in% c("Estou cursando e concluirei o Ensino Médio após 2023", 
-                                "Não concluí e não estou cursando o Ensino Médio")) %>%
+  filter(!TP_FAIXA_ETARIA %in% c("Menor de 17 anos", "17 anos"),
+         TP_ST_CONCLUSAO %in% c("Estou cursando e concluirei o Ensino Médio após esse ano", "Não concluí e não estou cursando o Ensino Médio")) %>%
+  
   
   # Criando critério de certificação
   mutate(conseguiu = ifelse(

@@ -1,0 +1,1639 @@
+---
+title: "Testes estatísticos"
+author: "Caroline de Oliveira"
+date: "2026-08-30"
+output: pdf_document
+---
+
+```{r include=FALSE}
+# Configuração global de codificação para evitar erros de renderização
+options(encoding = "UTF-8")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+A análise teve como objetivo verificar se o desempenho dos participantes diferia segundo diversas variáveis sociais, como dependência administrativa da escola, Tipo de escola, escolaridade da mãe, idade.
+
+Inicialmente, foram avaliadas as características das distribuições e a homogeneidade das variâncias. Em seguida, considerando os resultados desses diagnósticos, foi realizada a ANOVA de Welch, seguida pelo teste post-hoc de Games-Howell. Por fim, foram calculados os tamanhos de efeito global e par a par.
+
+
+
+```{r warning=FALSE, include=FALSE}
+library(tidyverse)   # Manipulação e visualização de dados
+library(rstatix)     # Testes estatísticos (Levene, ANOVA, Tukey, Games-Howell)
+library(effectsize)  # Tamanho do efeito (Omega-quadrado)
+library(car)         # Suporte para ANOVA de fatores não balanceados
+library(moments)
+library(dplyr)
+library(emmeans)
+library(purrr)
+library(knitr)
+
+
+```
+
+```{r warning=FALSE, include=FALSE}
+#============================================================================
+#  BASE DE DADOS COM CATEGORIAS
+#============================================================================
+
+enem_2023 <- read_csv("DOCUMENTOS_ENEM/DADOS/ENEM_2023_categorias.csv")
+
+
+#TRANSFORMANDO EM FATOR
+enem_2023$dep_adm <- as.factor(enem_2023$dep_adm)
+enem_2023$tipo_escola <- as.factor(enem_2023$tipo_escola)
+enem_2023$escolaridade_mae <- as.factor(enem_2023$escolaridade_mae)
+enem_2023$TP_FAIXA_ETARIA <- as.factor(enem_2023$TP_FAIXA_ETARIA)
+enem_2023$desempenho <- as.numeric(enem_2023$desempenho)
+enem_2023$renda_familiar <- as.factor(enem_2023$renda_familiar)
+enem_2023$internet <- as.factor(enem_2023$internet)
+enem_2023$TP_COR_RACA <- as.factor(enem_2023$TP_COR_RACA)
+
+```
+
+## Dependência administrativa 
+
+
+A igualdade das variâncias entre os grupos foi avaliada por meio do teste de Levene.
+
+O teste de Levene apresentou resultado estatisticamente significativo:
+
+$$
+F(4, 2.569.185) = 3204,0,\quad p < 0,001.
+$$
+
+Portanto, rejeita-se a hipótese nula de igualdade das variâncias, indicando heterogeneidade das variâncias entre as categorias de dependência administrativa. Dessa forma, não é recomendada a utilização da ANOVA tradicional, que pressupõe homocedasticidade, sendo adotada a ANOVA de Welch, mais robusta à desigualdade das variâncias.
+
+```{r dependencia, warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ dep_adm)
+
+# B. Cálculo de Assimetria e Curtose por Dependência Administrativa
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(dep_adm) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r tabela lavene,warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (dep_adm)` = "Dependência Administrativa",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+Também foram calculadas medidas de assimetria e curtose para avaliar a forma das distribuições de desempenho em cada categoria.
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Dependência Administrativa` = dep_adm,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+Os valores de assimetria variaram entre -0,336 e 0,279, indicando distribuições próximas da simetria. A curtose variou entre 2,52 e 2,81, valores próximos à referência de 3 para uma distribuição mesocúrtica. Dessa forma, apesar de pequenas diferenças na forma das distribuições, não foram observadas assimetrias ou curtoses extremas que comprometessem a análise.
+
+
+Diante da evidência de heterogeneidade das variâncias, foi utilizada a ANOVA de Welch para verificar se havia diferença entre as médias de desempenho das cinco categorias de dependência administrativa.
+
+```{r anova dependencia, warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# ANOVA de Welch & Post-Hoc Games-Howell
+# ----------------------------------------------------------------------
+
+# ANOVA de Welch via rstatix (para extrair a tabela organizada)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ dep_adm)
+
+# Teste Post-Hoc de Games-Howell
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ dep_adm)
+
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(dep_adm) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$dep_adm))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(dep_adm == g[1])
+    g2 <- stats_grupos %>% filter(dep_adm == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Dependência Administrativa",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+```
+
+A ANOVA de Welch indicou diferença estatisticamente significativa entre as médias dos grupos:
+
+$$
+F(4, 38.680) = 60.188,\quad p < 0,001.
+$$
+
+
+Assim, rejeita-se a hipótese de igualdade das médias de desempenho entre as categorias de dependência administrativa. Esse resultado indica que pelo menos duas categorias apresentam médias estatisticamente diferentes.
+
+
+Para avaliar a magnitude da associação global entre a dependência administrativa e o desempenho, foi calculado o Ômega Quadrado ($\omega^2$), uma medida de tamanho de efeito populacional para análises de variância. Ao contrário do Eta Quadrado ($\eta^2$), que avalia a amostragem direta e tende a superestimar o efeito, o $\omega^2$ aplica uma correção pelo erro amostral, fornecendo uma estimativa mais conservadora e não enviesada.Contudo, ao utilizar a estatística $F$ de Welch em bancos de dados de altíssima amostragem ($N > 2{,}5 \text{ milhões}$), as fórmulas assintóticas automatizadas baseadas exclusivamente nos graus de liberdade ajustados ($df_2$) tendem a hiperinflacionar o resultado, fazendo o indicador convergir artificialmente para valores próximos do limite teórico máximo ($1{,}00$).
+
+Para mitigar essa distorção e garantir uma estimativa realista da proporção da variância populacional explicada, aplicou-se a fórmula do Ômega Quadrado ajustada diretamente pelo tamanho amostral total real ($N$), expressa por:
+
+$$\omega^2 = \frac{(k - 1) \cdot (F_{\text{Welch}} - 1)}{(k - 1) \cdot (F_{\text{Welch}} - 1) + N}$$
+
+Onde $k$ representa o número de grupos da variável categórica, $F_{\text{Welch}}$ é a estatística F ajustada pela ANOVA de Welch e $N$ é o tamanho total de observações do banco de dados.A interpretação da magnitude do $\omega^2$ seguiu os pontos de corte estabelecidos por Cohen, considerando-se valores de $\omega^2 < 0{,}01$ como insignificantes; $0{,}01 \le \omega^2 < 0{,}06$ como pequenos; $0{,}06 \le \omega^2 < 0{,}14$ como médios/moderados; e $\omega^2 \ge 0{,}14$ como grandes. Essa abordagem assegura a precisão do parâmetro global sem comprometer a avaliação complementar realizada pelas comparações par a par ($d_{av}$).
+
+```{r omega dep, warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Dependência Administrativa",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+O valor obtido foi:
+
+$$
+\omega^2 = 0,086
+$$
+
+indicando que aproximadamente 8,6\% da variabilidade do desempenho está associada à dependência administrativa da escola. Esse resultado indica um efeito global relevante, embora a maior parte da variabilidade do desempenho esteja relacionada a outros fatores não contemplados nessa análise.
+
+Como a ANOVA de Welch indicou diferença global e o teste de Levene evidenciou heterogeneidade das variâncias, foi utilizado o teste de Games-Howell para identificar quais pares de categorias diferiam entre si.
+
+
+Como o teste de Levene indicou heterogeneidade das variâncias, foi calculado, para cada comparação, o (d_{av}) (diferença padronizada de médias utilizando o desvio-padrão médio dos dois grupos). Essa medida permite avaliar a magnitude das diferenças entre cada par de categorias sem utilizar um único desvio-padrão comum para todos os grupos.
+
+A opção pelo desvio-padrão médio dos dois grupos ($d_{av}$) em detrimento da variância combinada (pooled standard deviation) do $d$ de Cohen convencional justifica-se pela violação da homocedasticidade evidenciada pelo teste de Levene. Sob heterocedasticidade, a combinação ponderada das variâncias inflaciona ou atenua artificialmente o tamanho do efeito. O $d_{av}$ assegura uma estimativa não enviesada da magnitude da diferença entre pares de grupos com dispersões distintas.  
+
+O cálculo foi realizado por:
+
+$$
+d_{av} =
+\frac{\bar{X}_1-\bar{X}_2}
+{\sqrt{\frac{s_1^2+s_2^2}{2}}}
+$$
+A interpretação da magnitude das diferenças padronizadas ($d_{av}$) seguiu as diretrizes de Cohen, adotando-se os seguintes pontos de corte em valor absoluto: $\vert{}d_{av}\vert{} < 0{,}20$ como efeito desprezível; $0{,}20 \le \vert{}d_{av}\vert{} < 0{,}50$ como pequeno; $0{,}50 \le \vert{}d_{av}\vert{} < 0{,}80$ como médio; e $\vert{}d_{av}\vert{} \ge 0{,}80$ como grande.
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+
+```
+
+O teste de Games-Howell indicou diferenças estatisticamente significativas em todas as dez comparações par a par ((p < 0,001)).
+
+As maiores diferenças absolutas entre as médias foram observadas entre Estadual e Privada (96,4 pontos), Municipal e Privada (86,4 pontos), Estadual e Federal (75,6 pontos) e Não Informado e Privada (73,3 pontos).
+
+A menor diferença foi observada entre Estadual e Municipal, de aproximadamente 10,0 pontos.
+
+É importante destacar que, devido ao elevado tamanho da amostra, diferenças relativamente pequenas podem apresentar significância estatística. Por esse motivo, a interpretação dos resultados deve considerar também a magnitude dos efeitos, e não apenas os valores de (p).
+
+Considerando a magnitude dos efeitos, observa-se que as maiores diferenças ocorreram entre escolas privadas e escolas estaduais ou municipais, bem como entre escolas federais e municipais. Em contraste, as diferenças entre Estadual e Municipal e entre Municipal e Não Informado apresentaram magnitude desprezível.
+
+Destaca-se ainda a relativa proximidade entre Federal e Privada, cuja diferença apresentou efeito pequeno $d_{av}=-0,270$, apesar de estatisticamente significativa no teste de Games-Howell. Esse resultado reforça a importância de distinguir significância estatística de magnitude da diferença.
+
+## Tipo escola 
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ tipo_escola)
+
+# B. Cálculo de Assimetria e Curtose por Tipo Escola
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(tipo_escola) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (tipo_escola)` = "Tipo Escola",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Tipo Escola` = tipo_escola,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ tipo_escola)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ tipo_escola)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(tipo_escola) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$tipo_escola))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(tipo_escola == g[1])
+    g2 <- stats_grupos %>% filter(tipo_escola == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Tipo Escola",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Tipo de Escola",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+```
+## Escolaridade Mãe 
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ escolaridade_mae)
+
+# B. Cálculo de Assimetria e Curtose por Tipo Escola
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(escolaridade_mae) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (escolaridade_mae)` = "Escolaridade Mãe",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Escolaridade Mãe` = escolaridade_mae,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ escolaridade_mae)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ escolaridade_mae)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(escolaridade_mae) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$escolaridade_mae))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(escolaridade_mae == g[1])
+    g2 <- stats_grupos %>% filter(escolaridade_mae == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Escolaridade Mãe",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Escolaridade Mãe",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+```
+
+## Renda Familiar 
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ renda_familiar)
+
+# B. Cálculo de Assimetria e Curtose por Tipo Escola
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(renda_familiar) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (renda_familiar)` = "Renda Familiar",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Renda Familiar` = renda_familiar,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ renda_familiar)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ renda_familiar)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(renda_familiar) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$renda_familiar))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(renda_familiar == g[1])
+    g2 <- stats_grupos %>% filter(renda_familiar == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Renda Familiar",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Renda Familiar",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+
+```
+
+## Faixa Etária
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ TP_FAIXA_ETARIA)
+
+# B. Cálculo de Assimetria e Curtose por 
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(TP_FAIXA_ETARIA) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (TP_FAIXA_ETARIA)` = "Faixa Etária",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Faixa Etária` = TP_FAIXA_ETARIA,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ TP_FAIXA_ETARIA)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ TP_FAIXA_ETARIA)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(TP_FAIXA_ETARIA) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$TP_FAIXA_ETARIA))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(TP_FAIXA_ETARIA == g[1])
+    g2 <- stats_grupos %>% filter(TP_FAIXA_ETARIA == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Faixa Etária",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Faixa Etária",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+```
+## Acesso a internet 
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ internet)
+
+# B. Cálculo de Assimetria e Curtose por
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(internet) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (internet)` = "Acesso à Internet",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Acesso à Internet` = internet,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ internet)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ internet)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(internet) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$internet))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(internet == g[1])
+    g2 <- stats_grupos %>% filter(internet == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Acesso à Internet",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Acesso à Internet",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+
+```
+## Raça/Cor
+
+```{r warning=FALSE, include=FALSE}
+# A. Teste de Homocedasticidade (Igualdade de Variâncias de Levene)
+
+# Serve para saber se seguimos com ANOVA tradicional ou ANOVA de Welch
+
+teste_levene <- enem_2023 %>% 
+
+  levene_test(desempenho ~ TP_COR_RACA)
+
+# B. Cálculo de Assimetria e Curtose por Tipo Escola
+
+estatisticas_forma <- enem_2023 %>%
+
+  group_by(TP_COR_RACA) %>%
+
+  summarise(
+
+    N = n(),
+
+    Assimetria = skewness(desempenho, na.rm = TRUE),
+
+    Curtose = kurtosis(desempenho, na.rm = TRUE)
+
+  )
+# Interpretação: 
+
+# Assimetria próxima de 0 (entre -1 e 1) = distribuição simétrica.
+
+# Curtose próxima de 3 (entre 2 e 4) = curva normal (mesocúrtica). 
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+# A. Formatação do Teste de Levene
+tabela_levene <- teste_levene %>%
+  transmute(
+    `Variável Resposta` = "Desempenho",
+    `Fator (TP_COR_RACA)` = "Raça/Cor",
+    `df1` = df1,
+    `df2` = format(df2, big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), nsmall = 1, decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_levene, align = "llcccc", caption = "**A. Teste de Homocedasticidade de Levene**")
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# B. Formatação da Assimetria e Curtose
+tabela_forma <- estatisticas_forma %>%
+  mutate(
+    N = format(N, big.mark = "."),
+    Assimetria = sprintf("%+.3f", Assimetria) %>% gsub("\\.", ",", .),
+    Curtose = sprintf("%.2f", Curtose) %>% gsub("\\.", ",", .),
+    `Formato da Distribuição` = "Simétrica e Mesocúrtica"
+  ) %>%
+  rename(
+    `Raça/Cor` = TP_COR_RACA,
+    `Total de Alunos (N)` = N,
+    `Assimetria (Skewness)` = Assimetria,
+    `Curtose (Kurtosis)` = Curtose
+  )
+
+kable(tabela_forma, align = "lrrrl", caption = "**B. Estatísticas de Forma: Assimetria e Curtose**")
+```
+
+```{r warning=FALSE, include=FALSE}
+# ----------------------------------------------------------------------
+# OPÇÃO 2: Se o Levene der p < 0.05 (Variâncias diferentes - Mais provável)
+# ----------------------------------------------------------------------
+# ANOVA de Welch (Ajustada para heterocedasticidade)
+res_welch <- enem_2023 %>% 
+  welch_anova_test(desempenho ~ TP_COR_RACA)
+
+# Teste Post-Hoc de Games-Howell (Substituto do Tukey para variâncias desiguais)
+res_gh <- enem_2023 %>% 
+  games_howell_test(desempenho ~ TP_COR_RACA)
+
+# ----------------------------------------------------------------------
+# Omega-quadrado
+# ----------------------------------------------------------------------
+
+F_welch <- as.numeric(res_welch$statistic)
+df1    <- as.numeric(res_welch$DFn)
+N_total <- nrow(enem_2023)
+
+k <- df1 + 1
+
+omega2_adj <- ((k - 1) * (F_welch - 1)) /
+              (((k - 1) * (F_welch - 1)) + N_total)
+
+omega2_adj <- max(0, omega2_adj)
+
+# ----------------------------------------------------------------------
+# Cálculo do d de Cohen para todas as combinações pares
+# ----------------------------------------------------------------------
+# 1. Cálculo Prévia das Estatísticas Descritivas por Grupo
+# ----------------------------------------------------------------------
+stats_grupos <- enem_2023 %>%
+  group_by(TP_COR_RACA) %>%
+  summarise(
+    media = mean(desempenho, na.rm = TRUE),
+    dp = sd(desempenho, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# ----------------------------------------------------------------------
+# 2. Tamanho do Efeito Par a Par (d_av de Cohen com variâncias desiguais)
+# ----------------------------------------------------------------------
+grupos <- levels(as.factor(enem_2023$TP_COR_RACA))
+
+resultado_dav <- map_dfr(
+  combn(grupos, 2, simplify = FALSE),
+  function(g) {
+    # Garante a ordem exata de g[1] e g[2]
+    g1 <- stats_grupos %>% filter(TP_COR_RACA == g[1])
+    g2 <- stats_grupos %>% filter(TP_COR_RACA == g[2])
+    
+    dif <- g1$media - g2$media
+    d_av <- dif / sqrt((g1$dp^2 + g2$dp^2) / 2)
+    
+    # Retorna o par direto e o par invertido para alinhar perfeitamente no Join
+    bind_rows(
+      tibble(group1 = g[1], group2 = g[2], d_av_calc = d_av),
+      tibble(group1 = g[2], group2 = g[1], d_av_calc = -d_av)
+    )
+  }
+)
+```
+
+```{r warning=FALSE, echo=FALSE}
+# 1. Tabela ANOVA de Welch
+tabela_welch <- res_welch %>%
+  transmute(
+    `Variável` = "Desempenho",
+    `Fator` = "Raça/Cor",
+    `DFn` = DFn,
+    `DFd` = format(round(DFd, 0), big.mark = "."),
+    `Estatística F` = format(round(statistic, 1), big.mark = ".", decimal.mark = ","),
+    `Valor-p` = if_else(p < 0.001, "< 0,001", as.character(p))
+  )
+
+kable(tabela_welch, align = "llcccc", caption = "**C. ANOVA de Welch**")
+
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# Tabela
+# ----------------------------------------------------------------------
+
+tabela_omega <- tibble(
+  `Parâmetro / Fator` = "Raça/Cor",
+  `Estimativa (omega²)` = sprintf(
+    "%.3f (%.1f%%)",
+    omega2_adj,
+    omega2_adj * 100
+  ),
+  `Magnitude (Cohen)` = case_when(
+    omega2_adj < 0.01 ~ "Insignificante",
+    omega2_adj < 0.06 ~ "Pequena",
+    omega2_adj < 0.14 ~ "Média / Moderada",
+    TRUE ~ "Grande"
+  )
+)
+
+knitr::kable(
+  tabela_omega,
+  align = c("l", "c", "c"),
+  caption = "**D. Tamanho do efeito global (Omega-quadrado)**"
+)
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+# ----------------------------------------------------------------------
+# 3. Tabela Integrada (Games-Howell + d de Cohen)
+# ----------------------------------------------------------------------
+tabela_comparativa <- res_gh %>%
+  inner_join(resultado_dav, by = c("group1", "group2")) %>%
+  mutate(
+    # Classificação de magnitude baseada no valor absoluto
+    magnitude = case_when(
+      abs(d_av_calc) < 0.20 ~ "Desprezível",
+      abs(d_av_calc) < 0.50 ~ "Pequeno",
+      abs(d_av_calc) < 0.80 ~ "Médio",
+      TRUE                  ~ "Grande"
+    ),
+    # Formatação para o padrão numérico brasileiro (vírgula)
+    `Dif. Médias`         = sprintf("%+.1f", estimate) %>% gsub("\\.", ",", .),
+    `IC 95% (Diferença)` = paste0("[", sprintf("%+.1f", conf.low), " ; ", sprintf("%+.1f", conf.high), "]") %>% gsub("\\.", ",", .),
+    `Valor-p aj.`        = if_else(p.adj < 0.001, "< 0,001", sprintf("%.3f", p.adj) %>% gsub("\\.", ",", .)),
+    `d de Cohen (d_av)`   = sprintf("%+.3f", d_av_calc) %>% gsub("\\.", ",", .),
+    `Magnitude (d)`       = magnitude
+  ) %>%
+  select(
+    `Grupo 1` = group1,
+    `Grupo 2` = group2,
+    `Dif. Médias`,
+    `IC 95% (Diferença)`,
+    `Valor-p aj.`,
+    `d de Cohen (d_av)`,
+    `Magnitude (d)`
+  )
+
+# Exibição da tabela formatada
+kable(tabela_comparativa, align = "llccccc", caption = "**E. Comparações Par a Par (Games-Howell & d de Cohen)**")
+
+```

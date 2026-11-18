@@ -1,0 +1,17 @@
+MODELO SN1 COM FORMAÇÃO
+
+MU:
+desempenho ~ FAIXA_ETARIA_AGRUPADA + TP_SEXO + TP_COR_RACA + 
+    escolaridade_mae + renda_agrupada + TP_LINGUA + internet + 
+    DEP_ADM_AGRUPADA + TEMPO_ESPERA_AGRUPADO + CENTRO + modalidade_agrupada + 
+    FORMAÇÃO
+
+SIGMA:
+~FAIXA_ETARIA_AGRUPADA + escolaridade_pai + renda_agrupada + 
+    TP_LINGUA + DEP_ADM_AGRUPADA + TEMPO_ESPERA_AGRUPADO + CENTRO + 
+    modalidade_agrupada + FORMAÇÃO
+
+NU:
+~escolaridade_pai + renda_agrupada + TEMPO_ESPERA_AGRUPADO + 
+    CENTRO + FORMAÇÃO
+<environment: 0x00000156014f4790>

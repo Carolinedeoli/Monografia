@@ -1,0 +1,252 @@
+******************************************************************
+Family:  c("ST2", "Skew t (Azzalini type 2)") 
+
+Call:  gamlss(formula = formula_mu, sigma.formula = ~FAIXA_ETARIA_AGRUPADA +  
+    escolaridade_pai + renda_agrupada + TP_LINGUA +  
+    DEP_ADM_AGRUPADA + TEMPO_ESPERA_AGRUPADO + CENTRO +  
+    modalidade_agrupada, nu.formula = ~1, tau.formula = ~1,  
+    family = ST2(), data = dados_modelo, control = gamlss.control(n.cyc = 500,  
+        c.crit = 0.001, trace = TRUE)) 
+
+Fitting method: RS() 
+
+------------------------------------------------------------------
+Mu link function:  identity
+Mu Coefficients:
+                                              Estimate Std. Error t value Pr(>|t|)
+(Intercept)                                   658.6058     5.2951 124.381  < 2e-16
+FAIXA_ETARIA_AGRUPADA19 anos                   -1.8289     1.3374  -1.368 0.171479
+FAIXA_ETARIA_AGRUPADA20 a 25 anos              -3.0834     1.9648  -1.569 0.116584
+FAIXA_ETARIA_AGRUPADA26 a 50 anos             -17.8501     3.5327  -5.053 4.39e-07
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos         -59.9366     5.8309 -10.279  < 2e-16
+FAIXA_ETARIA_AGRUPADAMenor de idade            -1.1602     1.0320  -1.124 0.260924
+TP_SEXOMasculino                                7.1239     0.7328   9.722  < 2e-16
+TP_COR_RACABranca                              10.7593     4.0040   2.687 0.007213
+TP_COR_RACAIndígena                           -17.3272     8.0342  -2.157 0.031043
+TP_COR_RACANão Informado                       15.7031     4.7518   3.305 0.000952
+TP_COR_RACAParda                                0.1094     4.0140   0.027 0.978263
+TP_COR_RACAPreta                               -8.9127     4.1012  -2.173 0.029777
+escolaridade_paiMédio completo                  1.8608     1.4403   1.292 0.196390
+escolaridade_paiNão completou EF (até 5º ano)  -8.3236     2.2011  -3.782 0.000156
+escolaridade_paiNão completou EF (até 9º ano)  -2.5229     1.8987  -1.329 0.183951
+escolaridade_paiNão sabe                       -4.6569     3.5117  -1.326 0.184813
+escolaridade_paiNunca estudou                 -11.7329     5.1097  -2.296 0.021674
+escolaridade_paiPós-graduação                   3.8505     1.6143   2.385 0.017075
+escolaridade_paiSuperior completo               5.0101     1.6283   3.077 0.002095
+escolaridade_maeMédio completo                  0.8231     1.2573   0.655 0.512694
+escolaridade_maeNão completou EF (até 5º ano)  -3.2066     1.7356  -1.848 0.064677
+escolaridade_maeNão completou EF (até 9º ano)  -1.4135     1.5625  -0.905 0.365671
+escolaridade_maeNão sabe                       -5.7045     1.7706  -3.222 0.001276
+escolaridade_maeNunca estudou                 -14.9105     4.1579  -3.586 0.000336
+escolaridade_maePós-graduação                   8.2439     1.5820   5.211 1.89e-07
+escolaridade_maeSuperior completo               7.4160     1.4752   5.027 5.02e-07
+renda_agrupadaMais de 10 a 20 SM               25.2668     1.7166  14.719  < 2e-16
+renda_agrupadaMais de 2 a 5 SM                  9.7864     0.9805   9.981  < 2e-16
+renda_agrupadaMais de 20 SM                    31.5357     2.4228  13.016  < 2e-16
+renda_agrupadaMais de 5 a 10 SM                20.9674     1.3222  15.858  < 2e-16
+renda_agrupadaSem renda                        -2.8602     3.4473  -0.830 0.406735
+TP_LINGUAInglês                                14.6742     0.9508  15.434  < 2e-16
+internetPossui Internet                         6.6571     2.0239   3.289 0.001006
+DEP_ADM_AGRUPADAFederal                        29.5618     1.4575  20.283  < 2e-16
+DEP_ADM_AGRUPADANão informado                   0.8402     1.6384   0.513 0.608075
+DEP_ADM_AGRUPADAPrivada                        16.2607     1.4738  11.033  < 2e-16
+TEMPO_ESPERA_AGRUPADO2 anos                    -2.3964     1.9004  -1.261 0.207328
+TEMPO_ESPERA_AGRUPADO3 anos                     3.7763     2.6042   1.450 0.147045
+TEMPO_ESPERA_AGRUPADO4 a 5 anos                 0.6691     2.6076   0.257 0.797503
+TEMPO_ESPERA_AGRUPADO6 a 10 anos                0.5193     2.8650   0.181 0.856172
+TEMPO_ESPERA_AGRUPADOMais de 10 anos           -1.2184     3.8833  -0.314 0.753704
+TEMPO_ESPERA_AGRUPADONão informado            -17.0807     3.4958  -4.886 1.04e-06
+TEMPO_ESPERA_AGRUPADOSem espera               -13.5025     1.7758  -7.603 3.00e-14
+CENTROCCAE                                    -20.4429     2.1422  -9.543  < 2e-16
+CENTROCCE                                     -11.1447     1.8738  -5.948 2.76e-09
+CENTROCCENS                                   -37.1259     1.8134 -20.473  < 2e-16
+CENTROCCHN                                     -2.1804     1.4421  -1.512 0.130556
+CENTROCCJE                                     -2.1941     1.3886  -1.580 0.114118
+CENTROCCS                                      55.7183     1.7763  31.368  < 2e-16
+CENTROCE                                      -31.3157     2.3168 -13.517  < 2e-16
+CENTROCEFD                                    -26.3472     2.0139 -13.082  < 2e-16
+CENTROCEUNES                                  -22.5810     1.6476 -13.705  < 2e-16
+CENTROCT                                       27.4524     1.5397  17.830  < 2e-16
+modalidade_agrupadaLB_EP                      -31.5978     1.5301 -20.650  < 2e-16
+modalidade_agrupadaLB_SOCIAL                  -22.4669     1.5192 -14.789  < 2e-16
+modalidade_agrupadaLI_EP                      -23.7509     1.3303 -17.853  < 2e-16
+modalidade_agrupadaLI_SOCIAL                  -15.1030     1.3116 -11.515  < 2e-16
+                                                 
+(Intercept)                                   ***
+FAIXA_ETARIA_AGRUPADA19 anos                     
+FAIXA_ETARIA_AGRUPADA20 a 25 anos                
+FAIXA_ETARIA_AGRUPADA26 a 50 anos             ***
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos         ***
+FAIXA_ETARIA_AGRUPADAMenor de idade              
+TP_SEXOMasculino                              ***
+TP_COR_RACABranca                             ** 
+TP_COR_RACAIndígena                           *  
+TP_COR_RACANão Informado                      ***
+TP_COR_RACAParda                                 
+TP_COR_RACAPreta                              *  
+escolaridade_paiMédio completo                   
+escolaridade_paiNão completou EF (até 5º ano) ***
+escolaridade_paiNão completou EF (até 9º ano)    
+escolaridade_paiNão sabe                         
+escolaridade_paiNunca estudou                 *  
+escolaridade_paiPós-graduação                 *  
+escolaridade_paiSuperior completo             ** 
+escolaridade_maeMédio completo                   
+escolaridade_maeNão completou EF (até 5º ano) .  
+escolaridade_maeNão completou EF (até 9º ano)    
+escolaridade_maeNão sabe                      ** 
+escolaridade_maeNunca estudou                 ***
+escolaridade_maePós-graduação                 ***
+escolaridade_maeSuperior completo             ***
+renda_agrupadaMais de 10 a 20 SM              ***
+renda_agrupadaMais de 2 a 5 SM                ***
+renda_agrupadaMais de 20 SM                   ***
+renda_agrupadaMais de 5 a 10 SM               ***
+renda_agrupadaSem renda                          
+TP_LINGUAInglês                               ***
+internetPossui Internet                       ** 
+DEP_ADM_AGRUPADAFederal                       ***
+DEP_ADM_AGRUPADANão informado                    
+DEP_ADM_AGRUPADAPrivada                       ***
+TEMPO_ESPERA_AGRUPADO2 anos                      
+TEMPO_ESPERA_AGRUPADO3 anos                      
+TEMPO_ESPERA_AGRUPADO4 a 5 anos                  
+TEMPO_ESPERA_AGRUPADO6 a 10 anos                 
+TEMPO_ESPERA_AGRUPADOMais de 10 anos             
+TEMPO_ESPERA_AGRUPADONão informado            ***
+TEMPO_ESPERA_AGRUPADOSem espera               ***
+CENTROCCAE                                    ***
+CENTROCCE                                     ***
+CENTROCCENS                                   ***
+CENTROCCHN                                       
+CENTROCCJE                                       
+CENTROCCS                                     ***
+CENTROCE                                      ***
+CENTROCEFD                                    ***
+CENTROCEUNES                                  ***
+CENTROCT                                      ***
+modalidade_agrupadaLB_EP                      ***
+modalidade_agrupadaLB_SOCIAL                  ***
+modalidade_agrupadaLI_EP                      ***
+modalidade_agrupadaLI_SOCIAL                  ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+Sigma link function:  log
+Sigma Coefficients:
+                                               Estimate Std. Error t value Pr(>|t|)
+(Intercept)                                    4.288006   0.037191 115.295  < 2e-16
+FAIXA_ETARIA_AGRUPADA19 anos                   0.067148   0.017439   3.850 0.000118
+FAIXA_ETARIA_AGRUPADA20 a 25 anos              0.123549   0.025274   4.888 1.02e-06
+FAIXA_ETARIA_AGRUPADA26 a 50 anos              0.123141   0.041153   2.992 0.002772
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos          0.073106   0.068875   1.061 0.288503
+FAIXA_ETARIA_AGRUPADAMenor de idade           -0.047993   0.014572  -3.293 0.000991
+escolaridade_paiMédio completo                 0.006170   0.018280   0.338 0.735730
+escolaridade_paiNão completou EF (até 5º ano)  0.041575   0.025689   1.618 0.105589
+escolaridade_paiNão completou EF (até 9º ano)  0.010533   0.023609   0.446 0.655492
+escolaridade_paiNão sabe                       0.004564   0.043398   0.105 0.916252
+escolaridade_paiNunca estudou                  0.082441   0.055651   1.481 0.138514
+escolaridade_paiPós-graduação                 -0.040312   0.020930  -1.926 0.054110
+escolaridade_paiSuperior completo             -0.029765   0.021226  -1.402 0.160840
+renda_agrupadaMais de 10 a 20 SM              -0.132239   0.023947  -5.522 3.39e-08
+renda_agrupadaMais de 2 a 5 SM                -0.056116   0.012533  -4.478 7.59e-06
+renda_agrupadaMais de 20 SM                   -0.226362   0.039262  -5.765 8.26e-09
+renda_agrupadaMais de 5 a 10 SM               -0.081511   0.017336  -4.702 2.59e-06
+renda_agrupadaSem renda                        0.100338   0.037455   2.679 0.007392
+TP_LINGUAInglês                               -0.041728   0.011804  -3.535 0.000409
+DEP_ADM_AGRUPADAFederal                       -0.212037   0.019993 -10.606  < 2e-16
+DEP_ADM_AGRUPADANão informado                 -0.027529   0.020713  -1.329 0.183826
+DEP_ADM_AGRUPADAPrivada                       -0.129733   0.019878  -6.526 6.89e-11
+TEMPO_ESPERA_AGRUPADO2 anos                   -0.034059   0.024545  -1.388 0.165267
+TEMPO_ESPERA_AGRUPADO3 anos                   -0.040136   0.032533  -1.234 0.217326
+TEMPO_ESPERA_AGRUPADO4 a 5 anos               -0.002811   0.031916  -0.088 0.929809
+TEMPO_ESPERA_AGRUPADO6 a 10 anos              -0.009700   0.034297  -0.283 0.777311
+TEMPO_ESPERA_AGRUPADOMais de 10 anos          -0.030594   0.045261  -0.676 0.499074
+TEMPO_ESPERA_AGRUPADONão informado             0.106546   0.039344   2.708 0.006774
+TEMPO_ESPERA_AGRUPADOSem espera                0.048234   0.022718   2.123 0.033750
+CENTROCCAE                                     0.217622   0.026764   8.131 4.48e-16
+CENTROCCE                                     -0.006310   0.027249  -0.232 0.816868
+CENTROCCENS                                    0.121484   0.024143   5.032 4.90e-07
+CENTROCCHN                                     0.043883   0.020755   2.114 0.034492
+CENTROCCJE                                     0.152528   0.019175   7.954 1.89e-15
+CENTROCCS                                      0.253169   0.022233  11.387  < 2e-16
+CENTROCE                                      -0.096117   0.034470  -2.788 0.005302
+CENTROCEFD                                    -0.090491   0.030720  -2.946 0.003226
+CENTROCEUNES                                   0.168134   0.021671   7.758 8.99e-15
+CENTROCT                                      -0.007541   0.023197  -0.325 0.745134
+modalidade_agrupadaLB_EP                      -0.107203   0.018764  -5.713 1.12e-08
+modalidade_agrupadaLB_SOCIAL                  -0.045089   0.019222  -2.346 0.019002
+modalidade_agrupadaLI_EP                      -0.074205   0.016431  -4.516 6.33e-06
+modalidade_agrupadaLI_SOCIAL                   0.009864   0.016613   0.594 0.552685
+                                                 
+(Intercept)                                   ***
+FAIXA_ETARIA_AGRUPADA19 anos                  ***
+FAIXA_ETARIA_AGRUPADA20 a 25 anos             ***
+FAIXA_ETARIA_AGRUPADA26 a 50 anos             ** 
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos            
+FAIXA_ETARIA_AGRUPADAMenor de idade           ***
+escolaridade_paiMédio completo                   
+escolaridade_paiNão completou EF (até 5º ano)    
+escolaridade_paiNão completou EF (até 9º ano)    
+escolaridade_paiNão sabe                         
+escolaridade_paiNunca estudou                    
+escolaridade_paiPós-graduação                 .  
+escolaridade_paiSuperior completo                
+renda_agrupadaMais de 10 a 20 SM              ***
+renda_agrupadaMais de 2 a 5 SM                ***
+renda_agrupadaMais de 20 SM                   ***
+renda_agrupadaMais de 5 a 10 SM               ***
+renda_agrupadaSem renda                       ** 
+TP_LINGUAInglês                               ***
+DEP_ADM_AGRUPADAFederal                       ***
+DEP_ADM_AGRUPADANão informado                    
+DEP_ADM_AGRUPADAPrivada                       ***
+TEMPO_ESPERA_AGRUPADO2 anos                      
+TEMPO_ESPERA_AGRUPADO3 anos                      
+TEMPO_ESPERA_AGRUPADO4 a 5 anos                  
+TEMPO_ESPERA_AGRUPADO6 a 10 anos                 
+TEMPO_ESPERA_AGRUPADOMais de 10 anos             
+TEMPO_ESPERA_AGRUPADONão informado            ** 
+TEMPO_ESPERA_AGRUPADOSem espera               *  
+CENTROCCAE                                    ***
+CENTROCCE                                        
+CENTROCCENS                                   ***
+CENTROCCHN                                    *  
+CENTROCCJE                                    ***
+CENTROCCS                                     ***
+CENTROCE                                      ** 
+CENTROCEFD                                    ** 
+CENTROCEUNES                                  ***
+CENTROCT                                         
+modalidade_agrupadaLB_EP                      ***
+modalidade_agrupadaLB_SOCIAL                  *  
+modalidade_agrupadaLI_EP                      ***
+modalidade_agrupadaLI_SOCIAL                     
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+Nu link function:  identity 
+Nu Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -1.71429    0.05345  -32.07   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+Tau link function:  log 
+Tau Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)    11.20      16.83   0.666    0.505
+
+------------------------------------------------------------------
+No. of observations in the fit:  21247 
+Degrees of Freedom for the fit:  102
+      Residual Deg. of Freedom:  21145 
+                      at cycle:  143 
+ 
+Global Deviance:     228187.3 
+            AIC:     228391.3 
+            SBC:     229203.7 
+******************************************************************

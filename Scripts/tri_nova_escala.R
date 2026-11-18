@@ -333,6 +333,26 @@ kable(
 
 resultados_finais
 
+
+#===============================================================================
+# CÁLCULOS DE VALIDAÇÃO E CORRELAÇÃO
+#===============================================================================
+ERROS <- base_tri_comparativa_filtrada$DIFERENCA
+
+# Realiza o teste de hipótese para a Correlação de Pearson
+teste_cor <- cor.test(
+  base_tri_comparativa_filtrada$NU_NOTA_MT, 
+  base_tri_comparativa_filtrada$NOTA_SIMULADA_TRI, 
+  method = "pearson"
+)
+
+# Extrai os resultados do teste
+valor_cor <- teste_cor$estimate       # Coeficiente r de Pearson
+p_valor   <- teste_cor$p.value        # P-valor do teste
+
+# Formata o p-valor para exibição acadêmica (< 0.001 se for muito pequeno)
+p_valor_fmt <- if(p_valor < 0.001) "< 0.001" else round(p_valor, 4)
+
 #==========================================================
 # GRÁFICOS
 #==========================================================
@@ -369,7 +389,7 @@ ggplot(base_tri_comparativa_filtrada, aes(x = NU_NOTA_MT, y = NOTA_SIMULADA_TRI)
   # Linha de tendência real dos seus dados estimados
   geom_smooth(method = "gam", color = cor_principal, linetype = "longdash", linewidth = 1, se = FALSE) +
   labs(
-    title = "Correlação de Notas",
+    title = "Dispersão Comparativa das Notas",
     subtitle = "Comparativo: Notas INEP vs. Nota Simulada",
     x = "Nota Real (INEP)",
     y = "Nota Simulada (TRI)"
@@ -381,32 +401,64 @@ ggplot(base_tri_comparativa_filtrada, aes(x = NU_NOTA_MT, y = NOTA_SIMULADA_TRI)
     plot.subtitle = element_text(size = 10, color = "grey40", hjust = 0.5)
   )
 
+#===============================================================================
+# Comparativo das distribuições: Notas Reais vs. Estimadas
+#===============================================================================
+
 # Cores do padrão visual do projeto
-cor_real <- "#1f4e5b"      
-cor_estimada <- "#e06d53"  
+cor_real <- "#1f4e5b"      # Azul petróleo escuro
+cor_estimada <- "#e06d53"  # Coral suave
 
 ggplot(base_tri_comparativa_filtrada) +
+  
   # Curva da Nota Real
-  geom_density(aes(x = NU_NOTA_MT, color = "Nota Real"), linewidth = 1.2) +
+  geom_density(
+    aes(x = NU_NOTA_MT, color = "Nota Real"),
+    linewidth = 1.2,
+    trim = TRUE,
+    cut = 0
+  ) +
+  
   # Curva da Nota Estimada
-  geom_density(aes(x = NOTA_SIMULADA_TRI, color = "Nota Estimada"), linewidth = 1.2) +
-  # Configuração manual de cores e mapeamento para as linhas da legenda
+  geom_density(
+    aes(x = NOTA_SIMULADA_TRI, color = "Nota Estimada"),
+    linewidth = 1.2,
+    trim = TRUE,
+    cut = 0
+  ) +
+  
+  # Cores das curvas
   scale_color_manual(
-    values = c("Nota Real" = cor_real, "Nota Estimada" = cor_estimada),
+    values = c(
+      "Nota Real" = cor_real,
+      "Nota Estimada" = cor_estimada
+    ),
     name = NULL
   ) +
+  
+  # Rótulos
   labs(
     title = "Comparativo de Densidade: Notas Reais vs. Estimadas",
     subtitle = "Evidência visual do efeito de encolhimento do estimador EAP",
     x = "Nota na Prova de Matemática",
     y = "Densidade Populacional"
   ) +
-  scale_x_continuous(breaks = seq(200, 1000, by = 100)) +
+  
+  # Escala do eixo X
+  scale_x_continuous(
+    breaks = seq(150, 1000, by = 100),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  
+  # Tema
   theme_minimal(base_size = 11) +
   theme(
     panel.grid.minor = element_blank(),
     plot.title = element_text(face = "bold", hjust = 0.5),
     plot.subtitle = element_text(size = 9, color = "grey40", hjust = 0.5),
     legend.position = c(0.85, 0.85),
-    legend.background = element_rect(fill = "white", color = "grey90") 
+    legend.background = element_rect(
+      fill = "white",
+      color = "grey90"
+    )
   )

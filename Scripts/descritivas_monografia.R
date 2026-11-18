@@ -22,7 +22,7 @@ library(scales)
 #===============================================================================
 #REFAZENDO AS ANÁLISES COM BASE DE PARTICIPANTES LIMPA
 #===============================================================================
-enem_2023 <- read_csv("DOCUMENTOS_ENEM/DADOS/ENEM_2023_categorias.csv")
+enem_2023 <- read_csv("Monografia/DOCUMENTOS_ENEM/DADOS/ENEM_2023_categorias.csv")
 
 dim(enem_2023)
 colnames(dados_2023)
@@ -330,6 +330,127 @@ g3+g4
 g5
 
 tabela_resumo_profissional(dados_trineiro, "IN_TREINEIRO", "desempenho", "Resumo do Desempenho por Estado Civil")
+
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+plot_competencias_treineiro <- function(dados, var_cat = "Competencia", var_num = "Nota", var_grupo = "IN_TREINEIRO", titulo) {
+  
+  # 1. Tratamento dos dados
+  dados_filtrados <- dados %>% 
+    filter(grepl("COMP|Competência|Competencia", .data[[var_cat]], ignore.case = TRUE)) %>% 
+    mutate(
+      !!sym(var_num) := as.factor(.data[[var_num]]),
+      Grupo_Treineiro = case_when(
+        .data[[var_grupo]] %in% c(1, "1", "Sim", "S") ~ "Treineiro",
+        .data[[var_grupo]] %in% c(0, "0", "Não", "N") ~ "Não-Treineiro",
+        TRUE ~ as.character(.data[[var_grupo]])
+      )
+    ) %>% 
+    filter(!is.na(Grupo_Treineiro), !is.na(.data[[var_num]]))
+  
+  ggplot(dados_filtrados, aes(x = .data[[var_num]], fill = Grupo_Treineiro)) +
+    
+    # 2. Barras lado a lado
+    geom_bar(aes(y = after_stat(prop), group = Grupo_Treineiro), 
+             position = position_dodge(width = 0.9), 
+             width = 0.8, 
+             alpha = 0.85, 
+             color = NA) +
+    
+    # 3. NOVO: Rótulos de porcentagem em cima das barras
+    geom_text(
+      aes(
+        y = after_stat(prop), 
+        group = Grupo_Treineiro,
+        # Formata o número calculado para exibir como "XX%"
+        label = percent(after_stat(prop), accuracy = 1) 
+      ),
+      stat = "count", # Conta a proporção correta antes de criar o rótulo
+      position = position_dodge(width = 0.8), # Alinha exatamente com as barras "esquivadas"
+      vjust = -0.5,                            # Joga o texto um pouco acima do topo da barra
+      size = 2.5,                                # Tamanho da fonte do rótulo
+      color = "#333333",                       # Cor sutil para o texto
+      fontface = "bold"
+    ) +
+    
+    facet_wrap(vars(.data[[var_cat]]), ncol = 1, strip.position = "right") +
+    
+    # Expandimos levemente o limite superior do eixo Y para os rótulos não serem cortados no topo
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      expand = expansion(mult = c(0, 0.12)) # Dá 12% de margem extra no topo de cada gráfico
+    ) +
+    
+    scale_fill_manual(
+      values = c(
+        "Não-Treineiro" = "#4EAED6",  
+        "Treineiro"     = "#E08A8A"   
+      )
+    ) +
+    
+    labs(
+      title = titulo,
+      x = "Nota da Competência",
+      y = "Proporção de Alunos (%)",
+      fill = "Perfil do Candidato"
+    ) +
+    
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5, size = 14, margin = margin(b = 15)),
+      
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_line(color = "#EFEFEF"),
+      
+      axis.line.x = element_line(color = "#444444", linewidth = 1),
+      
+      strip.text = element_text(face = "bold", size = 10, color = "#444444"),
+      strip.background = element_rect(fill = "#F5F5F5", color = NA), 
+      
+      legend.position = "bottom", 
+      legend.title = element_text(face = "bold"),
+      legend.key = element_blank(),
+      
+      panel.spacing = unit(1.8, "lines") # Aumentei ligeiramente o espaço para acomodar as labels confortavelmente
+    )
+}
+# 1. Selecionando as competências e a coluna de treineiro
+df_comp_treineiro_long <- dados_filtrado_2023 %>%
+  select(IN_TREINEIRO, NU_NOTA_COMP1, NU_NOTA_COMP2, NU_NOTA_COMP3, NU_NOTA_COMP4, NU_NOTA_COMP5) %>%
+  rename(
+    "Competência 1"  = NU_NOTA_COMP1,
+    "Competência 2"     = NU_NOTA_COMP2,
+    "Competência 3"  = NU_NOTA_COMP3,
+    "Competência 4"   = NU_NOTA_COMP4,
+    "Competência 5" = NU_NOTA_COMP5
+  ) %>%
+  # Passamos no pivô APENAS as colunas que começam com "Comp."
+  pivot_longer(
+    cols = starts_with("Competência"), 
+    names_to = "Competencia", 
+    values_to = "Nota"
+  )
+
+# 2. Gerando o gráfico comparativo
+plot_competencias_treineiro(
+  dados = df_comp_treineiro_long,
+  var_cat = "Competencia",
+  var_num = "Nota",
+  var_grupo = "IN_TREINEIRO",
+  titulo = "Comparação das Competências da Redação: Treineiros vs Não-Treineiros"
+)
+
+
 #=======================================================
 # TABELA REDAÇÃO COM A BASE DO ENEM COMPLETA (FEZ AS PROVAS)
 
@@ -423,12 +544,12 @@ tabela_resumo_profissional(enem_2023, "tipo_escola", "desempenho", "Resumo do De
 tabela_resumo_profissional(enem_2023, "TP_FAIXA_ETARIA", "desempenho", "Resumo do Desempenho por Faixa Etária")
 tabela_resumo_profissional(enem_2023, "TP_ST_CONCLUSAO", "desempenho", "Resumo do Desempenho por Situação de Conclusão")
 tabela_resumo_profissional(enem_2023, "TP_COR_RACA", "desempenho", "Resumo do Desempenho por Raça/Cor")
-tabela_resumo_profissional(enem_2023, "escolaridade_mae", "desempenho", "Resumo do Desempenho por Escolaridade da Mãe")
+tabela_resumo_profissional(dados_filtrado_2023, "escolaridade_mae", "desempenho", "Resumo do Desempenho por Escolaridade da Mãe")
 tabela_resumo_profissional(enem_2023, "renda_familiar", "desempenho", "Resumo do Desempenho por Renda Familiar")
 tabela_resumo_profissional(enem_2023, "celulares", "desempenho", "Resumo do Desempenho por Posse de Celulares")
 tabela_resumo_profissional(enem_2023, "internet", "desempenho", "Resumo do Desempenho por Acesso a Internet")
 tabela_resumo_profissional(enem_2023, "TP_ESTADO_CIVIL", "desempenho", "Resumo do Desempenho por Estado Civil")
-
+tabela_resumo_profissional(dados_filtrado_2023, "IN_TREINEIRO", "desempenho", "Resumo do Desempenho de Treineiro e Não Treineiro")
 
 plot_hist_individual <- function(dados, var_cat, var_num,
                                  nome_cat = var_cat,
@@ -500,7 +621,7 @@ plot_densidade(enem_2023, "celulares", "desempenho", "Resumo do Desempenho por P
 plot_densidade(enem_2023, "internet", "desempenho", "Resumo do Desempenho por Acesso a Internet")
 plot_densidade(enem_2023, "dep_adm", "desempenho", "Resumo do Desempenho por Dependência Administrativa")
 plot_densidade(enem_2023, "TP_SEXO", "desempenho", "Resumo do Desempenho por Sexo")
-
+plot_densidade(dados_filtrado_2023, "IN_TREINEIRO", "desempenho", "Resumo do Desempenho de Treineiros e Não Treineiros")
 #plot densidade para conclusão com 2 linhas na legenda
 plot_densidade2 <- function(dados, var_cat, var_num, titulo){
   
@@ -709,11 +830,12 @@ resultado_conclusao <- df_conclusao %>%
     Porcentagem_Total = (Total_Aprovados / Total_Pessoas) * 100
   )
 
+Porcentagem_Total = (Total_Aprovados / Total_Pessoas) * 100
 # 3. Exibição do resultado direto
 cat("--- Resultado da Certificação de concluintes ---\n")
-cat("Total de candidatos analisados:", resultado_conclusao$Total_Pessoas, "\n")
-cat("Total que alcançou todas as notas:", resultado_conclusao$Total_Aprovados, "\n")
-cat("Porcentagem Total de Aprovação:", round(resultado_conclusao$Porcentagem_Total, 2), "%\n")
+cat("Total de candidatos analisados:", sum(tabela_final$Total), "\n")
+cat("Total que alcançou todas as notas:", sum(tabela_final$Certificados), "\n")
+cat("Porcentagem Total de Aprovação:", round((sum(tabela_final$Certificados)/sum(tabela_final$Total)*100), 2), "%\n")
 
 # 1. Processamento dos dados
 tabela_concluiu <- enem_2023 %>%
@@ -754,7 +876,7 @@ tabela_concluiu %>%
 #===============================================================================
 #Graficos por area de ensino
 #===============================================================================
-dados_long <- dados_trineiro %>%
+dados_long <- dados_filtrado_2023 %>%
   pivot_longer(
     cols = c(
       NU_NOTA_MT,
@@ -892,3 +1014,401 @@ ggplot(
     strip.text = element_text(face = "bold"),
     legend.position = "none"
   )
+
+#================================================================================
+
+
+# 1. Criando um dataframe de exemplo 
+df_notas <- dados_filtrado_2023 %>% select(NU_NOTA_CN, NU_NOTA_CH, NU_NOTA_LC, NU_NOTA_MT, NU_NOTA_REDACAO)
+
+df_notas <- data.frame(
+  "Ciências da Natureza" = dados_filtrado_2023$NU_NOTA_CN,
+  "Ciências Humanas"     = dados_filtrado_2023$NU_NOTA_CH,
+  "Linguagens e Códigos" = dados_filtrado_2023$NU_NOTA_LC,
+  "Matemática"           = dados_filtrado_2023$NU_NOTA_MT
+  #"Redação"              = dados_filtrado_2023$NU_NOTA_REDACAO
+)
+
+# 2. Transformando os dados para o formato longo (long format)
+df_long <- df_notas %>%
+  pivot_longer(cols = everything(), names_to = "Prova", values_to = "Nota")
+
+
+#-------------
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+plot_densidade_long <- function(dados, var_cat = "Prova", var_num = "Nota", titulo) {
+  
+  # Filtra para remover a Redação caso ela ainda esteja no dataset
+  dados_filtrados <- dados %>% 
+    filter(.data[[var_cat]] != "Redação")
+  
+  ggplot(dados_filtrados, aes(x = .data[[var_num]], color = .data[[var_cat]], fill = .data[[var_cat]])) +
+    
+    # Preenchimento cinza sutil ao fundo de todas as curvas para manter a estética de base unificada
+    geom_density(aes(fill = "Fundo"), color = NA, fill = "#EAEAEA", alpha = 0.5) +
+    
+    # As linhas de densidade com preenchimento quase transparente (alpha = 0.05)
+    geom_density(aes(y = after_stat(density)), linewidth = 1, alpha = 0.05, show.legend = TRUE) + 
+    
+    # Limita e ajusta o eixo X para a escala clássica do ENEM (0 a 1000)
+    scale_x_continuous(
+      limits = c(0, 1000), 
+      breaks = seq(0, 1000, 200)
+    ) +
+    
+    # Transforma o eixo Y em porcentagem real (ex: 0.1 vira 10%)
+    scale_y_continuous(labels = percent_format(accuracy = 0.1)) +
+    
+    # Paleta discreta de cores (scale_color_manual para as linhas)
+    # E removemos categorias nulas (na.translate = FALSE)
+    scale_color_discrete(na.translate = FALSE) +
+    scale_fill_discrete(na.translate = FALSE) +
+    
+    labs(
+      title = titulo,
+      x = "Nota (Desempenho Geral)",
+      y = "Proporção de Alunos (%)",
+      color = "Provas",
+      fill = "Provas"
+    ) +
+    
+    theme_minimal() +
+    theme(
+      # Título centralizado e limpo
+      plot.title = element_text(face = "bold", hjust = 0.5, size = 14, margin = margin(b = 15)),
+      plot.subtitle = element_text(size = 9, color = "gray30", hjust = 0.5),
+      
+      # Gridlines sutis
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "#EFEFEF"),
+      
+      # Legenda elegante na parte inferior
+      legend.position = "bottom",
+      legend.title = element_text(face = "bold"),
+      legend.key = element_blank()
+    ) +
+    # Força a legenda a mostrar contornos coloridos com preenchimento limpo
+    guides(
+      fill = "none",
+      color = guide_legend(override.aes = list(fill = "white", size = 1.5))
+    )
+}
+
+# Supondo que sua tabela longa se chama 'df_long'
+# e as colunas sejam exatamente 'Prova' e 'Nota':
+
+plot_densidade_long(
+  dados = df_long, 
+  var_cat = "Prova", 
+  var_num = "Nota", 
+  titulo = "Distribuição de Desempenho no ENEM"
+)
+#-------------
+
+
+
+library(ggridges)
+
+# Usando o mesmo df_long estruturado no passo anterior
+ggplot(df_long, aes(x = Nota, y = Prova, fill = Prova)) +
+  # scale determina a quantidade de sobreposição entre as curvas
+  geom_density_ridges(alpha = 0.7, scale = 1.3, color = "white", rel_min_height = 0.01, adjust = 2)+
+scale_fill_brewer(palette = "Set1") +
+  labs(
+    title = "Distribuição das Notas do ENEM por Prova",
+    subtitle = "Visualização em Ridgeline para comparação limpa de distribuições",
+    x = "Nota final",
+    y = NULL
+  ) +
+  xlim(0, 1000) +
+  theme_ridges() + # Tema otimizado do pacote ggridges
+  theme(
+    legend.position = "none", # Dispensa legenda pois os nomes já estão no eixo Y
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10, color = "dimgray", margin = margin(b = 15))
+  )
+
+
+#============================================================================
+
+plot_competencias_bar <- function(dados, var_cat = "Competencia", var_num = "Nota", titulo) {
+  
+  
+  dados_filtrados <- dados %>% 
+    filter(grepl("COMP|Competência|Competencia", .data[[var_cat]], ignore.case = TRUE)) %>% 
+    mutate(!!sym(var_num) := as.factor(.data[[var_num]]))
+  
+  ggplot(dados_filtrados, aes(x = .data[[var_num]], fill = .data[[var_cat]])) +
+    
+    # Gráfico de barras com posição lado a lado ('dodge') e opacidade sutil
+    geom_bar(aes(y = after_stat(prop), group = .data[[var_cat]]), 
+             position = position_dodge(width = 0.8), 
+             width = 0.7, 
+             alpha = 0.85,
+             color = NA) +
+    
+    
+    geom_text(
+      aes(
+        y = after_stat(prop), 
+        group = .data[[var_cat]], 
+        label = percent(after_stat(prop), accuracy = 1) 
+      ),
+      stat = "count", 
+      position = position_dodge(width = 0.8), 
+      vjust = -0.5,                            
+      size = 2.5,                                
+      color = "#333333",                       
+      fontface = "bold"
+    ) +
+    
+    facet_wrap(vars(.data[[var_cat]]), ncol = 1, strip.position = "right") +
+    
+    # Transforma o eixo Y em porcentagem real e adiciona folga no topo para o texto não cortar
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      expand = expansion(mult = c(0, 0.15)) # <-- AJUSTE DE MARGEM DE SEGURANÇA
+    ) +
+    
+    # Paleta de cores menos saturadas
+    scale_fill_manual(
+      values = c(
+        "#E08A8A", 
+        "#B2B2D8", 
+        "#66C2A5", 
+        "#4EAED6", 
+        "#E293E2"  
+      ),
+      na.translate = FALSE
+    ) +
+    
+    labs(
+      title = titulo,
+      x = "Nota da Competência",
+      y = "Proporção de Alunos (%)",
+      fill = "Competências"
+    ) +
+    
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5, size = 14, margin = margin(b = 15)),
+      
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_line(color = "#EFEFEF"),
+      
+      legend.position = "none", # Ocultada pois o facet_wrap com nomes na direita já serve de legenda
+      
+      strip.text = element_text(face = "bold", size = 10, color = "#444444"),
+      strip.background = element_rect(fill = "#F5F5F5", color = NA)
+    )
+}
+#---
+# 1. Preparando a base longa específica para as competências
+df_comp_long <- enem_2023 %>%
+  select(NU_NOTA_COMP1, NU_NOTA_COMP2, NU_NOTA_COMP3, NU_NOTA_COMP4, NU_NOTA_COMP5) %>%
+  # Renomeando para ficar estético na legenda do gráfico
+  rename(
+    "Competência 1"  = NU_NOTA_COMP1,
+    "Competência 2"     = NU_NOTA_COMP2,
+    "Competência 3"  = NU_NOTA_COMP3,
+    "Competência 4"   = NU_NOTA_COMP4,
+    "Competência 5" = NU_NOTA_COMP5
+  ) %>%
+  pivot_longer(cols = everything(), names_to = "Competência", values_to = "Nota") %>%
+  # Filtra possíveis NAs de faltosos na redação
+  filter(!is.na(Nota))
+
+# 2. Gerando o gráfico
+plot_competencias_bar(
+  dados = df_comp_long,
+  var_cat = "Competência",
+  var_num = "Nota",
+  titulo = "Desempenho dos Alunos por Competência da Redação"
+)
+
+#===============================================================================
+
+plot_competencias_facet <- function(dados, var_cat = "Competencia", var_num = "Nota", titulo) {
+  
+  # 1. Filtra para garantir as competências e as transforma em fator
+  dados_filtrados <- dados %>% 
+    filter(grepl("COMP|Competência|Competencia", .data[[var_cat]], ignore.case = TRUE)) %>% 
+    mutate(!!sym(var_num) := as.factor(.data[[var_num]]))
+  
+  ggplot(dados_filtrados, aes(x = .data[[var_num]], fill = .data[[var_cat]])) +
+    
+    # Desenha as barras individuais para cada subplot
+    geom_bar(aes(y = after_stat(prop), group = .data[[var_cat]]), 
+             width = 0.9, 
+             alpha = 0.85, 
+             color = NA) +
+    
+    # Divide o gráfico em linhas separadas (uma para cada competência)
+    # ncol = 1 coloca um embaixo do outro. Se preferir em colunas, use nrow = 1 ou retire para grid automático
+    facet_wrap(vars(.data[[var_cat]]), ncol = 1, strip.position = "right") +
+    
+    # Transforma o eixo Y em porcentagem real
+    scale_y_continuous(labels = percent_format(accuracy = 1)) +
+    
+    # Paleta de cores menos saturadas/pastel
+    scale_fill_manual(
+      values = c(
+        "#E08A8A", # Vermelho sutil
+        "#B2B2D8", # Roxo/Azul acinzentado
+        "#66C2A5", # Verde menta
+        "#4EAED6", # Azul suave
+        "#E293E2"  # Rosa queimado
+      ),
+      na.translate = FALSE
+    ) +
+    
+    labs(
+      title = titulo,
+      x = "Nota da Competência",
+      y = "Proporção de Alunos (%)"
+    ) +
+    
+    theme_minimal() +
+    theme(
+      # Título centralizado
+      plot.title = element_text(face = "bold", hjust = 0.5, size = 14, margin = margin(b = 15)),
+      
+      # Remove linhas de grade verticais e deixa as horizontais bem sutis
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_line(color = "#EFEFEF"),
+      
+      # Estilo dos títulos de cada faceta (os "labels" de cada linha)
+      strip.text = element_text(face = "bold", size = 10, color = "#444444"),
+      strip.background = element_rect(fill = "#F5F5F5", color = NA), # Fundo cinza sutil nas abas
+      
+      # Oculta a legenda já que o título da faceta já indica qual é a competência
+      legend.position = "none", 
+      
+      # Adiciona um pequeno espaçamento entre cada gráfico linha
+      panel.spacing = unit(1.5, "lines")
+    )
+}
+
+# Gerando os gráficos empilhados
+plot_competencias_facet(
+  dados = df_comp_long, # Seu dataframe no formato longo
+  var_cat = "Competência",
+  var_num = "Nota",
+  titulo = "Distribuição de Desempenho por Competência da Redação"
+)
+
+#===============================================================================
+
+
+table(dados_filtrado_2023$NU_NOTA_COMP1)
+table(dados_filtrado_2023$NU_NOTA_COMP2)
+table(dados_filtrado_2023$NU_NOTA_COMP3)
+table(dados_filtrado_2023$NU_NOTA_COMP4)
+table(dados_filtrado_2023$NU_NOTA_COMP5)
+
+#=====================================================================================
+
+library(ggplot2)
+library(scales)
+colnames(enem_2023)
+
+library(ggplot2)
+library(scales)
+
+library(dplyr)
+
+# Cria a ordem financeira correta (do menor para o maior salário)
+ordem_renda <- c(
+  "Nenhuma renda",
+  "Até 1 salário mínimo",
+  "De 1 a 1,5 salários mínimos",
+  "De 1,5 a 2 salários mínimos",
+  "De 2 a 2,5 salários mínimos",
+  "De 2,5 a 3 salários mínimos",
+  "De 3 a 4 salários mínimos",
+  "De 4 a 5 salários mínimos",
+  "De 5 a 6 salários mínimos",
+  "De 6 a 7 salários mínimos",
+  "De 7 a 8 salários mínimos",
+  "De 8 a 9 salários mínimos",
+  "De 9 a 10 salários mínimos",
+  "De 10 a 12 salários mínimos",
+  "De 12 a 15 salários mínimos",
+  "De 15 a 20 salários mínimos",
+  "Acima de 20 salários mínimos"
+)
+
+# Filtra e aplica a ordenação lógica dos fatores
+df_renda_escola_ordenada <- enem_2023 %>%
+  # 1. Mantém apenas categorias de escola válidas ("Pública" e "Privada")
+  filter(tipo_escola %in% c("Pública", "Privada")) %>%
+  
+  # 2. Remove "Não informado", nulos ou vazios da renda e do tipo de escola
+  filter(!is.na(renda_familiar) & renda_familiar != "" & renda_familiar != "Não informado") %>%
+  filter(!is.na(tipo_escola) & tipo_escola != "") %>%
+  
+  # 3. Transforma a renda em fator seguindo rigorosamente a ordem financeira
+  mutate(
+    renda_familiar = factor(renda_familiar, levels = ordem_renda, ordered = TRUE)
+  )
+
+library(ggplot2)
+library(scales)
+
+ggplot(df_renda_escola_ordenada, aes(y = renda_familiar, fill = tipo_escola)) +
+  # position = "fill" garante o empilhamento perfeito de 100%
+  geom_bar(position = "fill", width = 0.7, alpha = 0.85) +
+  
+  # Formata o eixo X (proporção) em porcentagem
+  scale_x_continuous(labels = percent_format(), expand = c(0, 0)) +
+  
+  # Cores elegantes menos saturadas (azul suave para pública, vermelho pastel para privada)
+  scale_fill_manual(
+    values = c(
+      "Pública" = "#4EAED6", 
+      "Privada" = "darkblue"  
+    )
+  ) +
+  
+  labs(
+    title = "Associação entre Renda Familiar e Tipo de Escola no ENEM",
+    subtitle = "Proporção de alunos por tipo de escola em cada faixa de renda",
+    x = "Proporção de Alunos (%)",
+    y = "Faixa de Renda Familiar",
+    fill = "Tipo de Escola"
+  ) +
+  
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 10, color = "gray30", hjust = 0.5, margin = margin(b = 15)),
+    
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.major.x = element_line(color = "#EFEFEF"),
+    
+    # Destaca o início das barras com uma linha marcante no eixo Y
+    axis.line.y = element_line(color = "#444444", linewidth = 1),
+    axis.text.y = element_text(size = 9.5, color = "#333333"),
+    
+    # Legenda elegante na parte inferior
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold")
+  )
+library(vcd)
+
+# Gera a tabela de dupla entrada sem dados faltantes
+tabela_limpa <- table(df_renda_escola_ordenada$renda_familiar, df_renda_escola_ordenada$tipo_escola)
+
+# Teste Qui-Quadrado
+teste_chi <- chisq.test(tabela_limpa)
+print(teste_chi)
+
+# Coeficiente V de Cramér (Força da Associação)
+cramer_val <- assocstats(tabela_limpa)
+print(cramer_val$cramer)

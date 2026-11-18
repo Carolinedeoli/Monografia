@@ -134,7 +134,7 @@ dados_filtrado_2023 <- limpar_base_enem(dados_2023, ano_corrente = 2023)
 
 # 3. Salva o resultado de forma otimizada (sem aspas desnecessárias nas strings)
 #write_csv(dados_filtrado_2023, "DOCUMENTOS_ENEM/DADOS/ENEM_2023.csv")
-#write_parquet(dados_filtrado_2023, "DOCUMENTOS_ENEM/DADOS/ENEM_2023.parquet")
+write_parquet(dados_filtrado_2023, "DOCUMENTOS_ENEM/DADOS/ENEM_2023.parquet")
 #===========  2022 =============================================================
 # 1. Importa a base bruta (usando read_delim do readr que é mais rápida)
 dados_2022 <- read_delim(
@@ -150,7 +150,7 @@ dados_filtrado_2022 <- limpar_base_enem(dados_2022, ano_corrente = 2022)
 
 # 3. Salva o resultado de forma otimizada (sem aspas desnecessárias nas strings)
 #write_csv(dados_filtrado_2022, "DOCUMENTOS_ENEM/DADOS/ENEM_2022.csv")
-#write_parquet(dados_filtrado_2022, "DOCUMENTOS_ENEM/DADOS/ENEM_2022.parquet")
+write_parquet(dados_filtrado_2022, "DOCUMENTOS_ENEM/DADOS/ENEM_2022.parquet")
 
 #===========  2021 =============================================================
 # 1. Importa a base bruta (usando read_delim do readr que é mais rápida)
@@ -167,7 +167,7 @@ dados_filtrado_2021 <- limpar_base_enem(dados_2021, ano_corrente = 2021)
 
 # 3. Salva o resultado de forma otimizada (sem aspas desnecessárias nas strings)
 #write_csv(dados_filtrado_2021, "DOCUMENTOS_ENEM/DADOS/ENEM_2021.csv")
-#write_parquet(dados_filtrado_2021, "DOCUMENTOS_ENEM/DADOS/ENEM_2021.parquet")
+write_parquet(dados_filtrado_2021, "DOCUMENTOS_ENEM/DADOS/ENEM_2021.parquet")
 
 #===========  2020 =============================================================
 # 1. Importa a base bruta (usando read_delim do readr que é mais rápida)
@@ -197,9 +197,9 @@ dados_2019 <- read_delim(
   show_col_types = FALSE
 )
 
-# 2. Executa a função
+#0 2. Executa a função
 dados_filtrado_2019 <- limpar_base_enem(dados_2019, ano_corrente = 2019)
 
 # 3. Salva o resultado de forma otimizada (sem aspas desnecessárias nas strings)
 #write_csv(dados_filtrado_2019, "DOCUMENTOS_ENEM/DADOS/ENEM_2019.csv")
-#write_parquet(dados_filtrado_2019, "DOCUMENTOS_ENEM/DADOS/ENEM_2019.parquet")
+write_parquet(dados_filtrado_2019, "DOCUMENTOS_ENEM/DADOS/ENEM_2019.parquet")

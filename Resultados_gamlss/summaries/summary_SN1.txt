@@ -1,0 +1,145 @@
+******************************************************************
+Family:  c("SN1", "Skew normal type 1 (Azzalini type 1)") 
+
+Call:  gamlss(formula = formula_mu, sigma.formula = ~FAIXA_ETARIA_AGRUPADA +  
+    escolaridade_pai + renda_agrupada + TP_LINGUA +  
+    DEP_ADM_AGRUPADA + TEMPO_ESPERA_AGRUPADO + CENTRO +  
+    modalidade_agrupada, nu.formula = ~1, family = SN1(),  
+    data = dados_modelo, mu.start = mu_inicial, sigma.start = sigma_inicial,  
+    nu.start = nu_inicial, control = gamlss.control(n.cyc = 500,  
+        c.crit = 0.001, mu.step = 0.5, sigma.step = 0.5,          nu.step = 0.2, trace = TRUE)) 
+
+Fitting method: RS() 
+
+------------------------------------------------------------------
+Mu link function:  identity
+Mu Coefficients:
+                                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                                   658.6085     5.2963 124.353  < 2e-16 ***
+FAIXA_ETARIA_AGRUPADA19 anos                   -1.8287     1.3374  -1.367 0.171532    
+FAIXA_ETARIA_AGRUPADA20 a 25 anos              -3.0831     1.9649  -1.569 0.116644    
+FAIXA_ETARIA_AGRUPADA26 a 50 anos             -17.8498     3.5327  -5.053 4.39e-07 ***
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos         -59.9365     5.8312 -10.279  < 2e-16 ***
+FAIXA_ETARIA_AGRUPADAMenor de idade            -1.1603     1.0320  -1.124 0.260882    
+TP_SEXOMasculino                                7.1238     0.7328   9.722  < 2e-16 ***
+TP_COR_RACABranca                              10.7596     4.0060   2.686 0.007239 ** 
+TP_COR_RACAIndígena                           -17.3270     8.0372  -2.156 0.031106 *  
+TP_COR_RACANão Informado                       15.7034     4.7536   3.303 0.000957 ***
+TP_COR_RACAParda                                0.1096     4.0159   0.027 0.978220    
+TP_COR_RACAPreta                               -8.9124     4.1031  -2.172 0.029860 *  
+escolaridade_paiMédio completo                  1.8609     1.4404   1.292 0.196377    
+escolaridade_paiNão completou EF (até 5º ano)  -8.3235     2.2011  -3.781 0.000156 ***
+escolaridade_paiNão completou EF (até 9º ano)  -2.5227     1.8988  -1.329 0.183997    
+escolaridade_paiNão sabe                       -4.6568     3.5119  -1.326 0.184846    
+escolaridade_paiNunca estudou                 -11.7325     5.1101  -2.296 0.021690 *  
+escolaridade_paiPós-graduação                   3.8505     1.6143   2.385 0.017079 *  
+escolaridade_paiSuperior completo               5.0102     1.6284   3.077 0.002095 ** 
+escolaridade_maeMédio completo                  0.8231     1.2573   0.655 0.512697    
+escolaridade_maeNão completou EF (até 5º ano)  -3.2066     1.7356  -1.848 0.064685 .  
+escolaridade_maeNão completou EF (até 9º ano)  -1.4135     1.5625  -0.905 0.365681    
+escolaridade_maeNão sabe                       -5.7045     1.7707  -3.222 0.001276 ** 
+escolaridade_maeNunca estudou                 -14.9106     4.1582  -3.586 0.000337 ***
+escolaridade_maePós-graduação                   8.2438     1.5820   5.211 1.90e-07 ***
+escolaridade_maeSuperior completo               7.4160     1.4752   5.027 5.02e-07 ***
+renda_agrupadaMais de 10 a 20 SM               25.2664     1.7166  14.719  < 2e-16 ***
+renda_agrupadaMais de 2 a 5 SM                  9.7862     0.9805   9.981  < 2e-16 ***
+renda_agrupadaMais de 20 SM                    31.5350     2.4228  13.016  < 2e-16 ***
+renda_agrupadaMais de 5 a 10 SM                20.9671     1.3222  15.858  < 2e-16 ***
+renda_agrupadaSem renda                        -2.8597     3.4474  -0.830 0.406817    
+TP_LINGUAInglês                                14.6741     0.9508  15.434  < 2e-16 ***
+internetPossui Internet                         6.6571     2.0240   3.289 0.001007 ** 
+DEP_ADM_AGRUPADAFederal                        29.5612     1.4575  20.282  < 2e-16 ***
+DEP_ADM_AGRUPADANão informado                   0.8400     1.6384   0.513 0.608182    
+DEP_ADM_AGRUPADAPrivada                        16.2604     1.4739  11.033  < 2e-16 ***
+TEMPO_ESPERA_AGRUPADO2 anos                    -2.3964     1.9005  -1.261 0.207350    
+TEMPO_ESPERA_AGRUPADO3 anos                     3.7764     2.6043   1.450 0.147054    
+TEMPO_ESPERA_AGRUPADO4 a 5 anos                 0.6694     2.6078   0.257 0.797429    
+TEMPO_ESPERA_AGRUPADO6 a 10 anos                0.5195     2.8651   0.181 0.856126    
+TEMPO_ESPERA_AGRUPADOMais de 10 anos           -1.2183     3.8832  -0.314 0.753715    
+TEMPO_ESPERA_AGRUPADONão informado            -17.0800     3.4958  -4.886 1.04e-06 ***
+TEMPO_ESPERA_AGRUPADOSem espera               -13.5024     1.7759  -7.603 3.01e-14 ***
+CENTROCCAE                                    -20.4422     2.1422  -9.543  < 2e-16 ***
+CENTROCCE                                     -11.1445     1.8738  -5.948 2.76e-09 ***
+CENTROCCENS                                   -37.1254     1.8134 -20.473  < 2e-16 ***
+CENTROCCHN                                     -2.1801     1.4421  -1.512 0.130613    
+CENTROCCJE                                     -2.1934     1.3886  -1.580 0.114220    
+CENTROCCS                                      55.7192     1.7763  31.369  < 2e-16 ***
+CENTROCE                                      -31.3159     2.3168 -13.517  < 2e-16 ***
+CENTROCEFD                                    -26.3474     2.0140 -13.082  < 2e-16 ***
+CENTROCEUNES                                  -22.5804     1.6476 -13.705  < 2e-16 ***
+CENTROCT                                       27.4525     1.5397  17.830  < 2e-16 ***
+modalidade_agrupadaLB_EP                      -31.5982     1.5301 -20.651  < 2e-16 ***
+modalidade_agrupadaLB_SOCIAL                  -22.4670     1.5192 -14.789  < 2e-16 ***
+modalidade_agrupadaLI_EP                      -23.7511     1.3304 -17.853  < 2e-16 ***
+modalidade_agrupadaLI_SOCIAL                  -15.1030     1.3116 -11.515  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+Sigma link function:  log
+Sigma Coefficients:
+                                               Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                                    4.288050   0.037188 115.308  < 2e-16 ***
+FAIXA_ETARIA_AGRUPADA19 anos                   0.067148   0.017439   3.851 0.000118 ***
+FAIXA_ETARIA_AGRUPADA20 a 25 anos              0.123548   0.025274   4.888 1.02e-06 ***
+FAIXA_ETARIA_AGRUPADA26 a 50 anos              0.123142   0.041153   2.992 0.002772 ** 
+FAIXA_ETARIA_AGRUPADAAcima de 50 anos          0.073106   0.068875   1.061 0.288503    
+FAIXA_ETARIA_AGRUPADAMenor de idade           -0.047992   0.014572  -3.293 0.000991 ***
+escolaridade_paiMédio completo                 0.006170   0.018280   0.338 0.735710    
+escolaridade_paiNão completou EF (até 5º ano)  0.041574   0.025689   1.618 0.105592    
+escolaridade_paiNão completou EF (até 9º ano)  0.010533   0.023609   0.446 0.655495    
+escolaridade_paiNão sabe                       0.004566   0.043397   0.105 0.916212    
+escolaridade_paiNunca estudou                  0.082441   0.055650   1.481 0.138513    
+escolaridade_paiPós-graduação                 -0.040313   0.020929  -1.926 0.054103 .  
+escolaridade_paiSuperior completo             -0.029765   0.021226  -1.402 0.160832    
+renda_agrupadaMais de 10 a 20 SM              -0.132239   0.023947  -5.522 3.39e-08 ***
+renda_agrupadaMais de 2 a 5 SM                -0.056116   0.012532  -4.478 7.59e-06 ***
+renda_agrupadaMais de 20 SM                   -0.226366   0.039261  -5.766 8.25e-09 ***
+renda_agrupadaMais de 5 a 10 SM               -0.081511   0.017336  -4.702 2.59e-06 ***
+renda_agrupadaSem renda                        0.100341   0.037455   2.679 0.007390 ** 
+TP_LINGUAInglês                               -0.041727   0.011804  -3.535 0.000409 ***
+DEP_ADM_AGRUPADAFederal                       -0.212038   0.019993 -10.606  < 2e-16 ***
+DEP_ADM_AGRUPADANão informado                 -0.027530   0.020712  -1.329 0.183802    
+DEP_ADM_AGRUPADAPrivada                       -0.129734   0.019878  -6.526 6.89e-11 ***
+TEMPO_ESPERA_AGRUPADO2 anos                   -0.034057   0.024544  -1.388 0.165282    
+TEMPO_ESPERA_AGRUPADO3 anos                   -0.040135   0.032533  -1.234 0.217335    
+TEMPO_ESPERA_AGRUPADO4 a 5 anos               -0.002810   0.031916  -0.088 0.929839    
+TEMPO_ESPERA_AGRUPADO6 a 10 anos              -0.009699   0.034297  -0.283 0.777339    
+TEMPO_ESPERA_AGRUPADOMais de 10 anos          -0.030593   0.045260  -0.676 0.499089    
+TEMPO_ESPERA_AGRUPADONão informado             0.106546   0.039344   2.708 0.006773 ** 
+TEMPO_ESPERA_AGRUPADOSem espera                0.048235   0.022718   2.123 0.033744 *  
+CENTROCCAE                                     0.217620   0.026763   8.131 4.48e-16 ***
+CENTROCCE                                     -0.006308   0.027248  -0.232 0.816926    
+CENTROCCENS                                    0.121479   0.024143   5.032 4.90e-07 ***
+CENTROCCHN                                     0.043883   0.020754   2.114 0.034490 *  
+CENTROCCJE                                     0.152527   0.019175   7.955 1.89e-15 ***
+CENTROCCS                                      0.253166   0.022233  11.387  < 2e-16 ***
+CENTROCE                                      -0.096116   0.034470  -2.788 0.005302 ** 
+CENTROCEFD                                    -0.090489   0.030720  -2.946 0.003226 ** 
+CENTROCEUNES                                   0.168131   0.021671   7.758 8.99e-15 ***
+CENTROCT                                      -0.007540   0.023197  -0.325 0.745149    
+modalidade_agrupadaLB_EP                      -0.107205   0.018763  -5.714 1.12e-08 ***
+modalidade_agrupadaLB_SOCIAL                  -0.045089   0.019222  -2.346 0.019001 *  
+modalidade_agrupadaLI_EP                      -0.074206   0.016431  -4.516 6.33e-06 ***
+modalidade_agrupadaLI_SOCIAL                   0.009863   0.016613   0.594 0.552734    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+Nu link function:  identity 
+Nu Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -1.71446    0.05343  -32.09   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+------------------------------------------------------------------
+No. of observations in the fit:  21247 
+Degrees of Freedom for the fit:  101
+      Residual Deg. of Freedom:  21146 
+                      at cycle:  66 
+ 
+Global Deviance:     228187.3 
+            AIC:     228389.3 
+            SBC:     229193.7 
+******************************************************************

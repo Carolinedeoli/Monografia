@@ -1,0 +1,6 @@
+PERFIL DE REFERÊNCIA DAS DISTRIBUIÇÕES PREVISTAS
+
+As covariáveis foram fixadas nos seguintes valores:
+FAIXA_ETARIA_AGRUPADA: 1; TP_SEXO: 1; TP_COR_RACA: 2; escolaridade_pai: 2; escolaridade_mae: 2; renda_agrupada: 1; TP_LINGUA: 2; internet: 2; DEP_ADM_AGRUPADA: 3; TEMPO_ESPERA_AGRUPADO: 8; CENTRO: 6; modalidade_agrupada: 1; FORMAÇÃO: 2
+
+Em cada gráfico, somente a variável representada é modificada entre suas categorias.
