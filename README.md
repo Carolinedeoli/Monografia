@@ -1,1 +1,1 @@
-# FATORES SOCIOECONÔMICOS E DESEMPENHO EDUCACIONAL: APLICAÇÃO DA TRI AO ENEM E MODELAGEM GAMLSS DOS INGRESSANTES DA UFES
+# Fatores Socioeconômicos e Desempenho Educacional: Aplicação da TRI ao ENEM e Modelagem GAMLSS dos Ingressantes da UFES
